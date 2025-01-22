@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 import logging
-
+ 
 app = func.FunctionApp()
 
 @app.route(route="chat")
