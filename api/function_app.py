@@ -7,7 +7,7 @@ import logging
 
 app = func.FunctionApp()
 
-@app.route(route="api/chat", methods=['POST'])
+@app.route(route="/api/chat", methods=['POST'])
 def chat(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # Get request body
