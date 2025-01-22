@@ -3,7 +3,6 @@
     {
       "route": "/api/chat",
       "methods": ["POST"]
-      // "rewrite": "/api/chat"
     },
     {
       "route": "/*",
