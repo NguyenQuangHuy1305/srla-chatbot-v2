@@ -74,7 +74,7 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
             "azure_openai_endpoint": azure_openai_endpoint,
             "function_key": function_key,
             "query": user_query,
-            "chat_history": chat_history if chat_history else []  # Exclude the current query from history
+            "chat_history": chat_history if chat_history else []
         }
 
         logging.info(f"Calling promptflow endpoint: {promptflow_endpoint}")
