@@ -4,10 +4,10 @@ import json
 import os
 import traceback
 import logging
- 
+
 app = func.FunctionApp()
 
-@app.route(route="chat", methods=["POST"])
+@app.route(route="chat")
 def chat(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # Get request body
