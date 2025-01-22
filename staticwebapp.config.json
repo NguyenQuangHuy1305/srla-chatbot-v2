@@ -2,7 +2,9 @@
   "routes": [
     {
       "route": "/api/chat",
-      "methods": ["POST"]
+      "methods": [
+        "post"
+      ]
     },
     {
       "route": "/*",
