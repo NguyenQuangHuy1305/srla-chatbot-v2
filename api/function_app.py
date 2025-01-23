@@ -63,7 +63,9 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
         # Call prompt flow endpoint
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {promptflow_key}'
+            'Authorization': f'Bearer {promptflow_key}',
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, GET, OPTIONS"
         }
 
         # request body (included chat history)
