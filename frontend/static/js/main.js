@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showTypingIndicator();
 
         try {
-            const response = await fetch('/api/chat', {
+            const response = await fetch('https://delightful-water-059cbd900.4.azurestaticapps.net/api/chat', { // TODO REMOVE
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Handle the success case
             const result = data.final_result?.output;
             if (result?.status === 'success' && result?.summary) {
-                appendMessage('assistant', result.summary, true);
+                appendMessage('assistant', result.summary, isHTML = true);
 
                 if (result.page_info) {
                     displayPagination(result.page_info);
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function appendMessage(role, content, isHTML = false) {
+    function appendMessage(role, content, sources = [], isHTML = false) {
         // Append to chat history
         chatHistory.push({
             "role": role == "user" ? "user" : "assistant",
@@ -209,32 +209,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
 
+        // Embed into the web page
         const messageDiv = document.createElement('div');
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
 
         const bubble = document.createElement('div');
         bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${
-            role === 'user' 
-                ? 'bg-blue-500 text-white' 
-                : role === 'system' 
-                    ? 'bg-gray-200 text-gray-700' 
+            role === 'user'
+                ? 'bg-blue-500 text-white'
+                : role === 'system'
+                    ? 'bg-gray-200 text-gray-700'
                     : 'bg-gray-300 text-gray-800'
         }`;
 
         if (isHTML) {
-            let processedContent = content;
-            if (role === 'assistant') {
-                processedContent = marked.parse(content);
-            }
-            bubble.className = `inline-block p-4 rounded-lg max-w-3/4 ${
-                role === 'user' 
-                    ? 'bg-blue-500 text-white' 
-                    : role === 'system' 
-                        ? 'bg-gray-200 text-gray-700' 
-                        : 'bg-gray-300 text-gray-800 assistant-message'
-            }`;
-            bubble.innerHTML = processedContent;
-            
+            // Convert Markdown-style links to HTML before setting innerHTML
+            let processedContent = content.replace(
+                /\[(.*?)\]\((https:\/\/.*?)\)/g,
+                '<a href="$2" class="text-blue-600 hover:underline">$1</a>'
+            );
+            //bubble.innerHTML = processedContent;
+            bubble.innerHTML = marked.parse(content);
+
             // Add click handlers to any PDF links
             const links = bubble.getElementsByTagName('a');
             Array.from(links).forEach(link => {
@@ -247,7 +243,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         } else {
-            bubble.textContent = content;
+            //bubble.textContent = content;
+            bubble.innerHTML = marked.parse(content);
+        }
+
+        if (sources) {
+
         }
 
         messageDiv.appendChild(bubble);
