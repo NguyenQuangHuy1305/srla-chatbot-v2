@@ -197,27 +197,39 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function appendMessage(role, content, isHTML = false) {
+        // Append to chat history
         chatHistory.push({
             "role": role == "user" ? "user" : "assistant",
-            "content": [{ "type": "text", "text": content }]
+            "content": [
+                {
+                    "type": "text",
+                    "text": content
+                }
+            ]
         });
         chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
-    
+
         const messageDiv = document.createElement('div');
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
-    
+
         const bubble = document.createElement('div');
-        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${
-            role === 'user' ? 'user-message' : 
-            role === 'system' ? 'system-message' : 
-            'bot-message'
-        }`;
+        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${role === 'user'
+            ? 'bg-blue-500 text-white'
+            : role === 'system'
+                ? 'bg-gray-200 text-gray-700'
+                : 'bg-gray-300 text-gray-800'
+            }`;
         bubble.style.whiteSpace = 'pre-wrap';
-    
+
         if (isHTML) {
-            let processedContent = marked.parse(content);
+            // Convert Markdown-style links to HTML before setting innerHTML
+            let processedContent = content.replace(
+                /\[(.*?)\]\((https:\/\/.*?)\)/g,
+                '<a href="$2" class="text-blue-600 hover:underline">$1</a>'
+            );
             bubble.innerHTML = processedContent;
-    
+
+            // Add click handlers to any PDF links
             const links = bubble.getElementsByTagName('a');
             Array.from(links).forEach(link => {
                 if (link.href.includes('/api/documents/')) {
@@ -231,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             bubble.textContent = content;
         }
-    
+
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
