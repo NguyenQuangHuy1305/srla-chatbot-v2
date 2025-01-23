@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showTypingIndicator();
 
         try {
-            const response = await fetch('/api/chat', { // TODO REMOVE
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Handle the success case
             const result = data.final_result?.output;
             if (result?.status === 'success' && result?.summary) {
-                appendMessage('assistant', result.summary, isHTML = true);
+                appendMessage('assistant', result.summary, sources = result.references, isHTML = true);
 
                 if (result.page_info) {
                     displayPagination(result.page_info);
@@ -223,10 +223,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (isHTML) {
             // Convert Markdown-style links to HTML before setting innerHTML
-            let processedContent = content.replace(
-                /\[(.*?)\]\((https:\/\/.*?)\)/g,
-                '<a href="$2" class="text-blue-600 hover:underline">$1</a>'
-            );
             bubble.innerHTML = marked.parse(content);
 
             // Add click handlers to any PDF links
@@ -244,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bubble.innerHTML = marked.parse(content);
         }
 
-        if (sources) {
+        if (sources.length > 0) {
             let sources_markdown = "\nSources\n"
             for (let i = 0; i < sources.length; i++) {
                 sources_markdown += `- ${sources[i]}\n`
