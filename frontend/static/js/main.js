@@ -213,20 +213,19 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
 
         const bubble = document.createElement('div');
-        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${role === 'user'
-            ? 'bg-blue-500 text-white'
-            : role === 'system'
-                ? 'bg-gray-200 text-gray-700'
-                : 'bg-gray-300 text-gray-800'
-            }`;
-        bubble.style.whiteSpace = 'pre-wrap';
+        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${
+            role === 'user' 
+                ? 'bg-blue-500 text-white' 
+                : role === 'system' 
+                    ? 'bg-gray-200 text-gray-700' 
+                    : 'bg-gray-300 text-gray-800'
+        }`;
 
         if (isHTML) {
-            // Convert Markdown-style links to HTML before setting innerHTML
-            let processedContent = content.replace(
-                /\[(.*?)\]\((https:\/\/.*?)\)/g,
-                '<a href="$2" class="text-blue-600 hover:underline">$1</a>'
-            );
+            let processedContent = content;
+            if (role === 'assistant') {
+                processedContent = marked.parse(content);
+            }
             bubble.innerHTML = processedContent;
 
             // Add click handlers to any PDF links
