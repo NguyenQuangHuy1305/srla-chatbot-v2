@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showTypingIndicator();
 
         try {
-            const response = await fetch('https://delightful-water-059cbd900.4.azurestaticapps.net/api/chat', { // TODO REMOVE
+            const response = await fetch('/api/chat', { // TODO REMOVE
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -214,13 +214,12 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
 
         const bubble = document.createElement('div');
-        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${
-            role === 'user'
+        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${role === 'user'
                 ? 'bg-blue-500 text-white'
                 : role === 'system'
                     ? 'bg-gray-200 text-gray-700'
                     : 'bg-gray-300 text-gray-800'
-        }`;
+            }`;
 
         if (isHTML) {
             // Convert Markdown-style links to HTML before setting innerHTML
@@ -228,7 +227,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 /\[(.*?)\]\((https:\/\/.*?)\)/g,
                 '<a href="$2" class="text-blue-600 hover:underline">$1</a>'
             );
-            //bubble.innerHTML = processedContent;
             bubble.innerHTML = marked.parse(content);
 
             // Add click handlers to any PDF links
@@ -243,12 +241,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         } else {
-            //bubble.textContent = content;
             bubble.innerHTML = marked.parse(content);
         }
 
         if (sources) {
+            let sources_markdown = "\nSources\n"
+            for (let i = 0; i < sources.length; i++) {
+                sources_markdown += `- ${sources[i]}\n`
+            }
 
+            bubble.innerHTML += marked.parse(sources_markdown);
         }
 
         messageDiv.appendChild(bubble);
