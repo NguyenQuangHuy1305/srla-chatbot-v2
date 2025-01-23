@@ -226,8 +226,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (role === 'assistant') {
                 processedContent = marked.parse(content);
             }
+            bubble.className = `inline-block p-4 rounded-lg max-w-3/4 ${
+                role === 'user' 
+                    ? 'bg-blue-500 text-white' 
+                    : role === 'system' 
+                        ? 'bg-gray-200 text-gray-700' 
+                        : 'bg-gray-300 text-gray-800 assistant-message'
+            }`;
             bubble.innerHTML = processedContent;
-
+            
             // Add click handlers to any PDF links
             const links = bubble.getElementsByTagName('a');
             Array.from(links).forEach(link => {
