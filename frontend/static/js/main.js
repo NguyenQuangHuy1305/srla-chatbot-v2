@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Inject in converted markdown
         bubble.innerHTML = marked.parse(content_markdown);
-        bubble.innerHTML += '\n' + sources_markdown
+        bubble.innerHTML += marked.parse('\n' + sources_markdown);
 
         // Add click handlers to any PDF links
         if (isHTML) {
