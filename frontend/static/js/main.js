@@ -224,8 +224,11 @@ document.addEventListener('DOMContentLoaded', function () {
         content_markdown = content;
 
         // Add sources
+        let sources_markdown = '##### Sources\n';
         if (sources.length > 0) {
-            let sources_markdown = '##### Sources\n'
+            let sources_html = document.createElement('div');
+            sources_html.appendChild(
+            );
             for (let i = 0; i < sources.length; i++) {
                 sources_markdown += `- ${sources[i]}\n`
             }
