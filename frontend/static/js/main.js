@@ -310,11 +310,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Table headers
         Array.from(bubble.getElementsByTagName('th')).forEach(el => {
-            el.className += 'py-2';
+            el.className += 'py-2 px-1';
         });
         // Table cells
         Array.from(bubble.getElementsByTagName('td')).forEach(el => {
-            el.className += 'py-2';
+            el.className += 'py-2 px-1';
         });
 
 
