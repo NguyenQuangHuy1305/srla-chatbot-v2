@@ -292,14 +292,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Unordered list
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
-            //el.className += 'list-inside list-disc';
-            el.className += 'list-disc';
+            el.className += 'list-inside list-disc';
             el.style.marginTop = '0';
         });
         // Ordered list
         Array.from(bubble.getElementsByTagName('ol')).forEach(el => {
-            //el.className += 'list-inside list-decimal';
-            el.className += 'list-decimal';
+            el.className += 'list-inside list-decimal';
             el.style.marginTop = '0';
         });
         // Tables
