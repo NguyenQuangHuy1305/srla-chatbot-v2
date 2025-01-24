@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Inject in styles
         // List
-        bubble.getElementsByTagName("ul").forEach(el => {
+        (bubble.getElementsByTagName("ul") ?? []).forEach(el => {
             el.className += 'list-disc';
         });
 
