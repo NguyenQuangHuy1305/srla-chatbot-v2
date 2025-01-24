@@ -266,11 +266,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Tables
         Array.from(bubble.getElementsByTagName('table')).forEach(el => {
-            el.className += 'table-auto';
+            el.className += 'table-auto border-collapse border-gray-600';
         });
         // Table rows
         Array.from(bubble.getElementsByTagName('tr')).forEach(el => {
-            el.className += 'border-b border-gray-450';
+            el.className += 'border-b border-gray-500';
         });
 
 
