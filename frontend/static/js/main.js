@@ -224,11 +224,31 @@ document.addEventListener('DOMContentLoaded', function () {
         content_markdown = content;
 
         // Add sources
-        let sources_markdown = '##### Sources\n';
+        let sources_markdown = '';
+        let sources_html = document.createElement('div');
         if (sources.length > 0) {
-            let sources_html = document.createElement('div');
-            sources_html.appendChild(
-            );
+            sources_markdown = '##### Sources\n';
+            sources_html.innerHTML += "<h5>Sources</h5>";
+
+            sources_html.innerHTML += `
+                <div id="sources-accordion" data-accordion="collapse"
+                    data-active-classes="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    data-inactive-classes="text-gray-500 dark:text-gray-400">
+                    <h2 id="accordion-flush-heading-1">
+                        <button type="button"
+                            class="flex items-center justify-between w-full py-5 font-medium rtl:text-right text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 gap-3"
+                            data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
+                            <span>What is Flowbite?</span>
+                            <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5 5 1 1 5" />
+                            </svg>
+                        </button>
+                    </h2>
+                </div>
+            `;
+
             for (let i = 0; i < sources.length; i++) {
                 sources_markdown += `- ${sources[i]}\n`
             }
@@ -237,6 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Inject in converted markdown
         bubble.innerHTML = marked.parse(content_markdown);
         bubble.innerHTML += marked.parse('\n' + sources_markdown);
+        bubble.innerHTML += sources_html;
 
         // Add click handlers to any PDF links
         if (isHTML) {
