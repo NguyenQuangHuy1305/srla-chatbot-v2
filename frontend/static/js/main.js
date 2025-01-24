@@ -225,9 +225,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Add sources
         let sources_markdown = '';
-        let sources_html = document.createElement('div');
+        let sources_html = '';
         if (sources.length > 0) {
             sources_markdown = '##### Sources\n';
+            sources_html = document.createElement('div');
             sources_html.innerHTML += "<h5>Sources</h5>";
 
             sources_html.innerHTML += `
@@ -280,12 +281,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Unordered list
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
-            el.className += 'list-inside list-disc';
+            //el.className += 'list-inside list-disc';
+            el.className += 'list-disc';
             el.style.marginTop = '0';
         });
         // Ordered list
         Array.from(bubble.getElementsByTagName('ol')).forEach(el => {
-            el.className += 'list-inside list-decimal';
+            //el.className += 'list-inside list-decimal';
+            el.className += 'list-decimal';
             el.style.marginTop = '0';
         });
         // Tables
