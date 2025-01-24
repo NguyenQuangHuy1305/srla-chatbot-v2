@@ -254,9 +254,14 @@ document.addEventListener('DOMContentLoaded', function () {
         Array.from(bubble.getElementsByTagName('h5')).forEach(el => {
             el.className += 'text-lg';
         });
-        // List
+        // Unordered list
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
             el.className += 'list-inside list-disc';
+            el.style.marginTop = '0';
+        });
+        // Ordered list
+        Array.from(bubble.getElementsByTagName('ol')).forEach(el => {
+            el.className += 'list-inside list-decimal';
             el.style.marginTop = '0';
         });
 
