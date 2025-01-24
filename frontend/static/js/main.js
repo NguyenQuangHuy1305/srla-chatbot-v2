@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
 
         const bubble = document.createElement('div');
-        bubble.className = `inline-block space-y-8 p-3 rounded-lg max-w-3/4 ${role === 'user'
+        bubble.className = `inline-block space-y-2 p-3 rounded-lg max-w-3/4 ${role === 'user'
             ? 'bg-blue-500 text-white'
             : role === 'system'
                 ? 'bg-gray-200 text-gray-700'
@@ -249,14 +249,15 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Inject in styles
-        // H5
+        // Inject CSS styles
+        // h5
         Array.from(bubble.getElementsByTagName('h5')).forEach(el => {
             el.className += 'text-lg';
         });
         // List
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
             el.className += 'list-inside list-disc';
+            el.style.marginTop = '0';
         });
 
         // Add bubble to DOM
