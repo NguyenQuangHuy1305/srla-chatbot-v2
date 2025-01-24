@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Inject in styles
         // List
         bubble.getElementsByTagName("ul").forEach(el => {
-            link.className += 'list-disc';
+            el.className += 'list-disc';
         });
 
         messageDiv.appendChild(bubble);
