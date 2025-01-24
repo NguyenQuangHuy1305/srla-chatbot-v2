@@ -224,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
         content_markdown = content;
 
         // Add sources
+        const sources_id_prefix = crypto.randomUUID();
         let sources_markdown = '';
         let sources_html = document.createElement('div');
         if (sources.length > 0) {
@@ -231,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
             sources_html.innerHTML += "<h5>Sources</h5>";
 
             sources_html.innerHTML += `
-                <div id="sources-accordion" data-accordion="collapse"
+                <div id="accordion-flush" data-accordion="collapse"
                     data-active-classes="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                     data-inactive-classes="text-gray-500 dark:text-gray-400">
                     <h2 id="accordion-flush-heading-1">
@@ -246,16 +247,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             </svg>
                         </button>
                     </h2>
-                </div>
 
-                <div id="accordion-flush-body-1" class="hidden" aria-labelledby="accordion-flush-heading-1">
-                    <div class="py-5 border-b border-gray-200 dark:border-gray-700">
-                        <p class="mb-2 text-gray-500 dark:text-gray-400">Flowbite is an open-source library of interactive
-                            components built on top of Tailwind CSS including buttons, dropdowns, modals, navbars, and more.</p>
-                        <p class="text-gray-500 dark:text-gray-400">Check out this guide to learn how to <a
-                                href="/docs/getting-started/introduction/"
-                                class="text-blue-600 dark:text-blue-500 hover:underline">get started</a> and start developing
-                            websites even faster with components on top of Tailwind CSS.</p>
+                    <div id="accordion-flush-body-1" class="hidden" aria-labelledby="accordion-flush-heading-1">
+                        <div class="py-5 border-b border-gray-200 dark:border-gray-700">
+                            <p class="mb-2 text-gray-500 dark:text-gray-400">Flowbite is an open-source library of interactive
+                                components built on top of Tailwind CSS including buttons, dropdowns, modals, navbars, and more.</p>
+                            <p class="text-gray-500 dark:text-gray-400">Check out this guide to learn how to <a
+                                    href="/docs/getting-started/introduction/"
+                                    class="text-blue-600 dark:text-blue-500 hover:underline">get started</a> and start developing
+                                websites even faster with components on top of Tailwind CSS.</p>
+                        </div>
                     </div>
                 </div>
             `;
