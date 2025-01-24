@@ -215,17 +215,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const bubble = document.createElement('div');
         bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${role === 'user'
-                ? 'bg-blue-500 text-white'
-                : role === 'system'
-                    ? 'bg-gray-200 text-gray-700'
-                    : 'bg-gray-300 text-gray-800'
+            ? 'bg-blue-500 text-white'
+            : role === 'system'
+                ? 'bg-gray-200 text-gray-700'
+                : 'bg-gray-300 text-gray-800'
             }`;
 
-        if (isHTML) {
-            // Convert Markdown-style links to HTML before setting innerHTML
-            bubble.innerHTML = marked.parse(content);
+        text_markdown = content;
+        // Change to double new lines
+        text_markdown = text_markdown.replaceAll('\n', '\n\n')
 
-            // Add click handlers to any PDF links
+        if (sources.length > 0) {
+            let sources_markdown = '##### Sources\n'
+            for (let i = 0; i < sources.length; i++) {
+                sources_markdown += `- ${sources[i]}\n`
+            }
+            text_markdown += sources_markdown;
+        }
+
+        // Add click handlers to any PDF links
+        if (isHTML) {
             const links = bubble.getElementsByTagName('a');
             Array.from(links).forEach(link => {
                 if (link.href.includes('/api/documents/')) {
@@ -236,18 +245,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     link.className = 'text-blue-600 hover:underline cursor-pointer';
                 }
             });
-        } else {
-            bubble.innerHTML = marked.parse(content);
         }
-
-        if (sources.length > 0) {
-            let sources_markdown = "\nSources\n"
-            for (let i = 0; i < sources.length; i++) {
-                sources_markdown += `- ${sources[i]}\n`
-            }
-
-            bubble.innerHTML += marked.parse(sources_markdown);
-        }
+        bubble.innerHTML = marked.parse(content);
 
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
