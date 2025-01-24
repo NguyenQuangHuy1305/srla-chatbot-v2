@@ -221,9 +221,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 : 'bg-gray-300 text-gray-800'
             }`;
 
-        text_markdown = content;
+        content_markdown = content;
         // Change to double new lines
-        text_markdown = text_markdown.replaceAll('\n', '\n\n')
+        content_markdown = content_markdown.replaceAll('\n', '\n\n')
 
         // Add sources
         if (sources.length > 0) {
@@ -231,11 +231,11 @@ document.addEventListener('DOMContentLoaded', function () {
             for (let i = 0; i < sources.length; i++) {
                 sources_markdown += `- ${sources[i]}\n`
             }
-            text_markdown += sources_markdown;
+            content_markdown += sources_markdown;
         }
 
         // Inject in converted markdown
-        bubble.innerHTML = marked.parse(content);
+        bubble.innerHTML = marked.parse(content_markdown);
 
         // Add click handlers to any PDF links
         if (isHTML) {
