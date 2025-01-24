@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
 
         const bubble = document.createElement('div');
-        bubble.className = `inline-block p-3 rounded-lg max-w-3/4 ${role === 'user'
+        bubble.className = `inline-block space-y-8 p-3 rounded-lg max-w-3/4 ${role === 'user'
             ? 'bg-blue-500 text-white'
             : role === 'system'
                 ? 'bg-gray-200 text-gray-700'
@@ -222,8 +222,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }`;
 
         content_markdown = content;
-        // Change to double new lines
-        content_markdown = content_markdown.replaceAll('\n', '\n\n')
 
         // Add sources
         if (sources.length > 0) {
@@ -261,6 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
             el.className += 'list-inside list-disc';
         });
 
+        // Add bubble to DOM
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
