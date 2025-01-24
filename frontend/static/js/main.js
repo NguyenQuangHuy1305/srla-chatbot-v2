@@ -308,6 +308,11 @@ document.addEventListener('DOMContentLoaded', function () {
         Array.from(bubble.getElementsByTagName('tr')).forEach(el => {
             el.className += 'border-b border-gray-500';
         });
+        // Table cells
+        Array.from(bubble.getElementsByTagName('td')).forEach(el => {
+            el.className += 'py-2';
+        });
+
 
 
         // Add bubble to DOM
