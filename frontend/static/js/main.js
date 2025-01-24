@@ -225,10 +225,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Add sources
         let sources_markdown = '';
-        let sources_html = '';
+        let sources_html = document.createElement('div');
         if (sources.length > 0) {
             sources_markdown = '##### Sources\n';
-            sources_html = document.createElement('div');
             sources_html.innerHTML += "<h5>Sources</h5>";
 
             sources_html.innerHTML += `
