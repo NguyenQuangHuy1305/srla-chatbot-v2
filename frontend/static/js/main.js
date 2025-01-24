@@ -264,6 +264,15 @@ document.addEventListener('DOMContentLoaded', function () {
             el.className += 'list-inside list-decimal';
             el.style.marginTop = '0';
         });
+        // Tables
+        Array.from(bubble.getElementsByTagName('table')).forEach(el => {
+            el.className += 'table-auto';
+        });
+        // Table rows
+        Array.from(bubble.getElementsByTagName('tr')).forEach(el => {
+            el.className += 'border-b border-gray-450';
+        });
+
 
         // Add bubble to DOM
         messageDiv.appendChild(bubble);
