@@ -229,11 +229,11 @@ document.addEventListener('DOMContentLoaded', function () {
             for (let i = 0; i < sources.length; i++) {
                 sources_markdown += `- ${sources[i]}\n`
             }
-            content_markdown += '\n' + sources_markdown;
         }
 
         // Inject in converted markdown
         bubble.innerHTML = marked.parse(content_markdown);
+        bubble.innerHTML += '\n' + sources_markdown
 
         // Add click handlers to any PDF links
         if (isHTML) {
