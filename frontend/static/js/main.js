@@ -252,9 +252,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Inject in styles
+        // H5
+        Array.from(bubble.getElementsByTagName('h5')).forEach(el => {
+            el.className += 'text-lg';
+        });
         // List
-        Array.from(bubble.getElementsByTagName("ul")).forEach(el => {
-            el.className += 'list-disc';
+        Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
+            el.className += 'list-inside list-disc';
         });
 
         messageDiv.appendChild(bubble);
