@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Change to double new lines
         text_markdown = text_markdown.replaceAll('\n', '\n\n')
 
+        // Add sources
         if (sources.length > 0) {
             let sources_markdown = '##### Sources\n'
             for (let i = 0; i < sources.length; i++) {
@@ -232,6 +233,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             text_markdown += sources_markdown;
         }
+
+        // Inject in converted markdown
+        bubble.innerHTML = marked.parse(content);
 
         // Add click handlers to any PDF links
         if (isHTML) {
@@ -246,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-        bubble.innerHTML = marked.parse(content);
 
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
