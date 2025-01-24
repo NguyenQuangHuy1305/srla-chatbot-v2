@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
             for (let i = 0; i < sources.length; i++) {
                 sources_markdown += `- ${sources[i]}\n`
             }
-            content_markdown += sources_markdown;
+            content_markdown += '\n' + sources_markdown;
         }
 
         // Inject in converted markdown
@@ -250,6 +250,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+
+        // Inject in styles
+        // List
+        bubble.getElementsByTagName("ul").forEach(el => {
+            link.className += 'list-disc';
+        });
 
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
