@@ -326,19 +326,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Tables
         Array.from(bubble.getElementsByTagName('table')).forEach(el => {
-            el.className += 'table-auto border-collapse border-gray-600';
+            el.className = 'min-w-full table-auto border-collapse bg-white bg-opacity-50 rounded-lg overflow-hidden';
+            el.style.marginTop = '1rem';
+            el.style.marginBottom = '1rem';
         });
+
         // Table rows
         Array.from(bubble.getElementsByTagName('tr')).forEach(el => {
-            el.className += 'border-b border-gray-500';
+            el.className = 'border-b border-gray-300 hover:bg-gray-50';
         });
+
         // Table headers
         Array.from(bubble.getElementsByTagName('th')).forEach(el => {
-            el.className += 'py-2 px-1';
+            el.className = 'px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider bg-gray-100';
         });
+
         // Table cells
         Array.from(bubble.getElementsByTagName('td')).forEach(el => {
-            el.className += 'py-2 px-1';
+            el.className = 'px-4 py-3 text-sm text-gray-900 whitespace-normal';
         });
     
         // Add bubble to DOM
