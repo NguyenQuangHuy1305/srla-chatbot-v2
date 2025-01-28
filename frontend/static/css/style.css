@@ -255,3 +255,20 @@
 [data-accordion] li:last-child {
     border-bottom: none;
 }
+
+/* Accordion transitions */
+[data-accordion] button[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+}
+
+[data-accordion] button svg {
+    transition: transform 0.2s ease-out;
+}
+
+[data-accordion] .hidden {
+    display: none;
+}
+
+[data-accordion] button[aria-expanded="true"] + div {
+    display: block;
+}

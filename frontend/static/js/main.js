@@ -238,30 +238,25 @@ document.addEventListener('DOMContentLoaded', function () {
         const messageId = crypto.randomUUID();
         let sources_html = document.createElement('div');
         if (sources.length > 0) {
-            const accordionId = `accordion-${messageId}`;
-            const headingId = `heading-${messageId}`;
-            const bodyId = `body-${messageId}`;
-    
             sources_html.innerHTML = `
                 <div class="mt-4 border-t border-gray-200 pt-4">
-                    <div id="${accordionId}" data-accordion="collapse">
-                        <h2 id="${headingId}">
+                    <div data-accordion="open">
+                        <h2>
                             <button type="button"
                                 class="flex items-center justify-between w-full py-2 px-3 text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg gap-3"
-                                data-accordion-target="#${bodyId}"
                                 aria-expanded="false"
-                                aria-controls="${bodyId}">
+                                data-accordion-target="#refs-${messageId}">
                                 <span>References (${sources.length})</span>
-                                <svg data-accordion-icon class="w-3 h-3 shrink-0" aria-hidden="true"
+                                <svg class="w-3 h-3 shrink-0 transition-transform" aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M1 1L5 5L9 1"/>
                                 </svg>
                             </button>
                         </h2>
-                        <div id="${bodyId}"
-                            class="hidden"
-                            aria-labelledby="${headingId}">
+                        <div id="refs-${messageId}"
+                            class="hidden overflow-hidden transition-[height]"
+                            aria-expanded="false">
                             <div class="py-2 px-3 text-sm text-gray-700">
                                 <ul class="space-y-2">
                                     ${sources.map(source => `
@@ -300,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Unordered list
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
-            if (!el.closest('[data-accordion]')) {  // Don't apply to accordion lists
+            if (!el.closest('[data-accordion]')) {  // Don't apply to lists inside accordion
                 el.className += 'list-inside list-disc';
                 el.style.marginTop = '0';
             }
@@ -331,13 +326,10 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        // Initialize Flowbite accordion
+    
+        // Re-initialize Flowbite
         if (sources.length > 0) {
-            const accordionElement = bubble.querySelector('[data-accordion="collapse"]');
-            if (accordionElement) {
-                const accordionInstance = new Flowbite.Accordion(accordionElement);
-            }
+            initFlowbite();
         }
     }
 
