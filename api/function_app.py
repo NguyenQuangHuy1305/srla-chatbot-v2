@@ -4,8 +4,36 @@ import json
 import os
 import traceback
 import logging
+import time
 
 app = func.FunctionApp()
+
+def get_env_vars_with_retry(max_retries=3, retry_delay=1):
+    """
+    Get environment variables with retry mechanism for cold starts
+    """
+    required_vars = [
+        "PROMPTFLOW_ENDPOINT",
+        "PROMPTFLOW_KEY",
+        "AZURE_AI_SEARCH_ENDPOINT",
+        "AZURE_AI_SEARCH_KEY",
+        "AZURE_OPENAI_ENDPOINT",
+        "AZURE_OPENAI_KEY",
+        "FUNCTION_KEY"
+    ]
+    
+    for attempt in range(max_retries):
+        env_vars = {var: os.environ.get(var) for var in required_vars}
+        missing_vars = [var for var, value in env_vars.items() if not value]
+        
+        if not missing_vars:
+            return env_vars
+            
+        if attempt < max_retries - 1:
+            logging.warning(f"Missing environment variables: {missing_vars}. Retrying in {retry_delay} seconds...")
+            time.sleep(retry_delay)
+    
+    raise ValueError(f"Failed to load environment variables after {max_retries} attempts: {missing_vars}")
 
 @app.route(route="chat", methods=["POST"])
 def chat(req: func.HttpRequest) -> func.HttpResponse:
@@ -13,124 +41,105 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
         # Get request body
         req_body = req.get_json()
         user_query = req_body.get('query')
-        chat_history = req_body.get('chats', [])  # Get chat history from request
-        
+        chat_history = req_body.get('chats', [])
+
         logging.info(f"Received query: {user_query}")
         logging.info(f"Received chat history: {json.dumps(chat_history)}")
 
         if not user_query:
             return func.HttpResponse(
-                json.dumps({"error": "No query provided"}),
+                json.dumps({
+                    "error": "No query provided",
+                    "details": "The query parameter is required"
+                }),
                 mimetype="application/json",
                 status_code=400
             )
 
-        # Get environment variables
-        promptflow_endpoint = os.environ.get("PROMPTFLOW_ENDPOINT")
-        promptflow_key = os.environ.get("PROMPTFLOW_KEY")
-        azure_ai_search_endpoint = os.environ.get("AZURE_AI_SEARCH_ENDPOINT")
-        azure_ai_search_key = os.environ.get("AZURE_AI_SEARCH_KEY")
-        azure_openai_endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
-        azure_openai_key = os.environ.get("AZURE_OPENAI_KEY")
-        function_key = os.environ.get("FUNCTION_KEY")
-
-        # Log environment variable status (without exposing actual values)
-        env_vars_status = {
-            "PROMPTFLOW_ENDPOINT": bool(promptflow_endpoint),
-            "PROMPTFLOW_KEY": bool(promptflow_key),
-            "AZURE_AI_SEARCH_ENDPOINT": bool(azure_ai_search_endpoint),
-            "AZURE_AI_SEARCH_KEY": bool(azure_ai_search_key),
-            "AZURE_OPENAI_ENDPOINT": bool(azure_openai_endpoint),
-            "AZURE_OPENAI_KEY": bool(azure_openai_key),
-            "FUNCTION_KEY": bool(function_key)
-        }
-        logging.info(f"Environment variables status: {json.dumps(env_vars_status)}")
-
-        # Verify all required environment variables
-        missing_vars = [var for var, value in env_vars_status.items() if not value]
-        if missing_vars:
-            error_msg = f"Missing environment variables: {', '.join(missing_vars)}"
-            logging.error(error_msg)
+        try:
+            # Get environment variables with retry
+            env_vars = get_env_vars_with_retry()
+        except ValueError as e:
             return func.HttpResponse(
                 json.dumps({
-                    "error": "Missing environment variables",
-                    "details": error_msg
+                    "error": "Configuration error",
+                    "details": str(e)
                 }),
                 mimetype="application/json",
-                status_code=500
+                status_code=503  # Service Unavailable
             )
 
         # Call prompt flow endpoint
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {promptflow_key}',
+            'Authorization': f'Bearer {env_vars["PROMPTFLOW_KEY"]}',
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, GET, OPTIONS"
         }
 
-        # request body (included chat history)
+        # request body
         request_body = {
-            "azure_ai_search_endpoint": azure_ai_search_endpoint,
-            "azure_ai_search_key": azure_ai_search_key,
-            "azure_openai_key": azure_openai_key,
-            "azure_openai_endpoint": azure_openai_endpoint,
-            "function_key": function_key,
+            "azure_ai_search_endpoint": env_vars["AZURE_AI_SEARCH_ENDPOINT"],
+            "azure_ai_search_key": env_vars["AZURE_AI_SEARCH_KEY"],
+            "azure_openai_key": env_vars["AZURE_OPENAI_KEY"],
+            "azure_openai_endpoint": env_vars["AZURE_OPENAI_ENDPOINT"],
+            "function_key": env_vars["FUNCTION_KEY"],
             "query": user_query,
             "chat_history": chat_history if chat_history else []
         }
 
-        logging.info(f"Calling promptflow endpoint: {promptflow_endpoint}")
-        logging.info(f"Chat history being sent: {json.dumps(chat_history[:-1] if chat_history else [])}")
-        
-        response = requests.post(
-            promptflow_endpoint,
-            headers=headers,
-            json=request_body
+        try:
+            response = requests.post(
+                env_vars["PROMPTFLOW_ENDPOINT"],
+                headers=headers,
+                json=request_body,
+                timeout=30  # Add timeout
+            )
+            response.raise_for_status()  # Raise exception for bad status codes
+        except requests.exceptions.Timeout:
+            return func.HttpResponse(
+                json.dumps({
+                    "error": "Request timeout",
+                    "details": "The request to the prompt flow service timed out"
+                }),
+                mimetype="application/json",
+                status_code=504  # Gateway Timeout
+            )
+        except requests.exceptions.RequestException as e:
+            return func.HttpResponse(
+                json.dumps({
+                    "error": "Prompt flow service error",
+                    "details": str(e)
+                }),
+                mimetype="application/json",
+                status_code=502  # Bad Gateway
+            )
+
+        try:
+            response_data = response.json()
+        except json.JSONDecodeError:
+            return func.HttpResponse(
+                json.dumps({
+                    "error": "Invalid response",
+                    "details": "Failed to parse response from prompt flow service"
+                }),
+                mimetype="application/json",
+                status_code=502
+            )
+
+        return func.HttpResponse(
+            json.dumps(response_data),
+            mimetype="application/json"
         )
 
-        logging.info(f"Promptflow response status: {response.status_code}")
-        logging.info(f"Promptflow response headers: {dict(response.headers)}")
-        
-        # Log response content (be careful with sensitive data)
-        try:
-            response_content = response.json()
-            logging.info("Successfully parsed response as JSON")
-        except json.JSONDecodeError:
-            logging.error(f"Failed to parse response as JSON. Response text: {response.text[:500]}...")
-            response_content = None
-
-        if response.status_code == 200:
-            return func.HttpResponse(
-                json.dumps(response_content),
-                mimetype="application/json"
-            )
-        else:
-            error_msg = {
-                "error": "Error from prompt flow service",
-                "details": {
-                    "status_code": response.status_code,
-                    "response": response.text[:1000]  # Limit response text length
-                }
-            }
-            logging.error(f"Error response: {json.dumps(error_msg)}")
-            return func.HttpResponse(
-                json.dumps(error_msg),
-                mimetype="application/json",
-                status_code=response.status_code
-            )
-
     except Exception as e:
-        error_msg = str(e)
-        stack_trace = traceback.format_exc()
-        logging.error(f"Unexpected error: {error_msg}")
-        logging.error(f"Stack trace: {stack_trace}")
+        logging.error(f"Unexpected error: {str(e)}")
+        logging.error(f"Stack trace: {traceback.format_exc()}")
         return func.HttpResponse(
             json.dumps({
-                "error": "Unexpected error",
-                "details": {
-                    "error": error_msg,
-                    "traceback": stack_trace
-                }
+                "error": "Internal server error",
+                "details": str(e),
+                "type": "unexpected_error"
             }),
             mimetype="application/json",
             status_code=500

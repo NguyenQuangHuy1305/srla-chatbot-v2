@@ -128,9 +128,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (showQuery) {
             appendMessage('user', message);
         }
-
+    
         showTypingIndicator();
-
+    
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -142,56 +142,67 @@ document.addEventListener('DOMContentLoaded', function () {
                     chats: chatHistory
                 })
             });
-
+    
             removeTypingIndicator();
-
-            // First check if the response is ok
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            // Get the response text first
+    
             const responseText = await response.text();
-
-            // Try to parse it as JSON
             let data;
+            
             try {
                 data = JSON.parse(responseText);
             } catch (parseError) {
                 console.error('Failed to parse JSON:', responseText);
-                throw new Error(`Failed to parse response as JSON: ${responseText}`);
+                throw new Error('Failed to parse server response');
             }
-
-            console.log('API Response:', data);
-
-            // Check for explicit error in response
+    
+            // If there's an error in the response
             if (data.error) {
-                throw new Error(`API Error: ${data.error}\nDetails: ${JSON.stringify(data.details || {}, null, 2)}`);
+                let errorMessage = data.error;
+                if (data.details) {
+                    errorMessage += '\n' + data.details;
+                }
+                
+                // Handle specific error types
+                switch(response.status) {
+                    case 503:
+                        errorMessage = 'Service is temporarily unavailable. Please try again in a few moments.';
+                        break;
+                    case 504:
+                        errorMessage = 'Request timed out. Please try again.';
+                        break;
+                    case 502:
+                        errorMessage = 'Server is temporarily unavailable. Please try again later.';
+                        break;
+                    case 400:
+                        errorMessage = 'Invalid request. Please check your input.';
+                        break;
+                }
+                
+                throw new Error(errorMessage);
             }
-
+    
             // Handle the success case
             const result = data.final_result?.output;
             if (result?.status === 'success' && result?.summary) {
                 appendMessage('assistant', result.summary, sources = result.references, isHTML = true);
-
+    
                 if (result.page_info) {
                     displayPagination(result.page_info);
                 } else {
                     paginationContainer.classList.add('hidden');
                 }
-
-                console.log('Metrics:', data.final_result?.system_metrics);
-                console.log('Pagination:', result?.page_info);
             } else {
-                // Log the unexpected format and show a more user-friendly message
-                console.error('Unexpected response format:', data);
                 throw new Error('Received unexpected response format from server');
             }
-
+    
         } catch (error) {
             removeTypingIndicator();
             console.error('Error:', error);
-            appendMessage('system', `Error: ${error.message}`);
+            
+            // Show user-friendly error message
+            const errorMessage = error.message || 'An unexpected error occurred. Please try again.';
+            appendMessage('system', errorMessage);
+            
             paginationContainer.classList.add('hidden');
         }
     }
