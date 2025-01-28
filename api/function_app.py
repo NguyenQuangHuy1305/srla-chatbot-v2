@@ -93,7 +93,7 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
                 env_vars["PROMPTFLOW_ENDPOINT"],
                 headers=headers,
                 json=request_body,
-                timeout=30  # Add timeout
+                timeout=180
             )
             response.raise_for_status()  # Raise exception for bad status codes
         except requests.exceptions.Timeout:
