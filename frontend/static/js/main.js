@@ -331,6 +331,14 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // Initialize Flowbite accordion
+        if (sources.length > 0) {
+            const accordionElement = bubble.querySelector('[data-accordion="collapse"]');
+            if (accordionElement) {
+                const accordionInstance = new Flowbite.Accordion(accordionElement);
+            }
+        }
     }
 
     // Event listeners
