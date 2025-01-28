@@ -146,6 +146,12 @@ document.addEventListener('DOMContentLoaded', function () {
             removeTypingIndicator();
     
             const responseText = await response.text();
+
+            // Check if response is empty or contains error indicators
+            if (!responseText || responseText.includes('Backend call failure')) {
+                throw new Error('The server is currently unavailable. Please try again in a few moments.');
+            }
+
             let data;
             
             try {
@@ -257,11 +263,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div id="refs-${messageId}"
                             class="hidden overflow-hidden transition-[height]"
                             aria-expanded="false">
-                            <div class="py-2 px-3 text-sm text-gray-700">
-                                <ul class="space-y-2">
-                                    ${sources.map(source => `
-                                        <li>${source}</li>
-                                    `).join('')}
+                            <div class="py-2 px-3 text-sm">
+                                <ul class="space-y-2 list-none">
+                                    ${sources.map(source => {
+                                        // Extract URL and text from the markdown-style link
+                                        const match = source.match(/\[(.*?)\]\((.*?)\)/);
+                                        if (match) {
+                                            const [_, text, url] = match;
+                                            const restOfText = source.split('),')[1] || '';
+                                            return `
+                                                <li>
+                                                    <a href="${url}" class="text-blue-600 hover:underline cursor-pointer" onClick="event.preventDefault(); openPdfViewer('${url}')">
+                                                        ${text}
+                                                    </a>${restOfText}
+                                                </li>
+                                            `;
+                                        }
+                                        return `<li>${source}</li>`;
+                                    }).join('')}
                                 </ul>
                             </div>
                         </div>
