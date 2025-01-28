@@ -1,6 +1,7 @@
 /* Custom styles for the typing animation */
 .typing-indicator {
     display: flex;
+    align-items: center;  /* Vertically center the dots and text */
     gap: 4px;
     padding: 12px 16px;
     background: #e2e8f0;
@@ -13,13 +14,16 @@
 .typing-indicator::after {
     content: "This might take a moment...";
     position: absolute;
-    left: 100%;
-    margin-left: 12px;
+    left: calc(100% + 12px);  /* Position text relative to the bubble */
+    top: 50%;  /* Center vertically */
+    transform: translateY(-50%);  /* Adjust for perfect vertical centering */
     white-space: nowrap;
     color: #64748b;
     opacity: 0;
     animation: fadeIn 1s forwards;
     animation-delay: 5s;
+    font-size: 14px;  /* Match the size of your other text */
+    line-height: 1;   /* Prevent any extra spacing */
 }
 
 @keyframes fadeIn {
@@ -34,6 +38,8 @@
     background: #94a3b8;
     border-radius: 50%;
     animation: bounce 1.3s linear infinite;
+    display: inline-block;  /* Ensure consistent alignment */
+    vertical-align: middle; /* Align dots vertically */
 }
 
 .typing-indicator span:nth-child(2) {
