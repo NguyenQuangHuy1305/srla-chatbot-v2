@@ -219,11 +219,11 @@ document.addEventListener('DOMContentLoaded', function () {
             ]
         });
         chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
-
+    
         // Embed into the web page
         const messageDiv = document.createElement('div');
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
-
+    
         const bubble = document.createElement('div');
         bubble.className = `inline-block space-y-2 p-3 rounded-lg max-w-3/4 ${role === 'user'
             ? 'bg-blue-500 text-white'
@@ -231,57 +231,54 @@ document.addEventListener('DOMContentLoaded', function () {
                 ? 'bg-gray-200 text-gray-700'
                 : 'bg-gray-300 text-gray-800'
             }`;
-
+    
         content_markdown = content;
-
+    
         // Add sources
-        const sources_id_prefix = crypto.randomUUID();
-        let sources_markdown = '';
+        const messageId = crypto.randomUUID();
         let sources_html = document.createElement('div');
         if (sources.length > 0) {
-            sources_markdown = '##### Sources\n';
-            sources_html.innerHTML += "<h5>Sources</h5>";
-
-            sources_html.innerHTML += `
-                <div id="accordion-flush" data-accordion="collapse"
-                    data-active-classes="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                    data-inactive-classes="text-gray-500 dark:text-gray-400">
-                    <h2 id="accordion-flush-heading-1">
-                        <button type="button"
-                            class="flex items-center justify-between w-full py-5 font-medium rtl:text-right text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 gap-3"
-                            data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
-                            <span>What is Flowbite?</span>
-                            <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5 5 1 1 5" />
-                            </svg>
-                        </button>
-                    </h2>
-
-                    <div id="accordion-flush-body-1" class="hidden" aria-labelledby="accordion-flush-heading-1">
-                        <div class="py-5 border-b border-gray-200 dark:border-gray-700">
-                            <p class="mb-2 text-gray-500 dark:text-gray-400">Flowbite is an open-source library of interactive
-                                components built on top of Tailwind CSS including buttons, dropdowns, modals, navbars, and more.</p>
-                            <p class="text-gray-500 dark:text-gray-400">Check out this guide to learn how to <a
-                                    href="/docs/getting-started/introduction/"
-                                    class="text-blue-600 dark:text-blue-500 hover:underline">get started</a> and start developing
-                                websites even faster with components on top of Tailwind CSS.</p>
+            const accordionId = `accordion-${messageId}`;
+            const headingId = `heading-${messageId}`;
+            const bodyId = `body-${messageId}`;
+    
+            sources_html.innerHTML = `
+                <div class="mt-4 border-t border-gray-200 pt-4">
+                    <div id="${accordionId}" data-accordion="collapse">
+                        <h2 id="${headingId}">
+                            <button type="button"
+                                class="flex items-center justify-between w-full py-2 px-3 text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg gap-3"
+                                data-accordion-target="#${bodyId}"
+                                aria-expanded="false"
+                                aria-controls="${bodyId}">
+                                <span>References (${sources.length})</span>
+                                <svg data-accordion-icon class="w-3 h-3 shrink-0" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M1 1L5 5L9 1"/>
+                                </svg>
+                            </button>
+                        </h2>
+                        <div id="${bodyId}"
+                            class="hidden"
+                            aria-labelledby="${headingId}">
+                            <div class="py-2 px-3 text-sm text-gray-700">
+                                <ul class="space-y-2">
+                                    ${sources.map(source => `
+                                        <li>${source}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
-
-            for (let i = 0; i < sources.length; i++) {
-                sources_markdown += `- ${sources[i]}\n`
-            }
         }
-
+    
         // Inject in converted markdown
         bubble.innerHTML = marked.parse(content_markdown);
-        bubble.innerHTML += marked.parse('\n' + sources_markdown);
         bubble.appendChild(sources_html);
-
+    
         // Add click handlers to any PDF links
         if (isHTML) {
             const links = bubble.getElementsByTagName('a');
@@ -295,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-
+    
         // Inject CSS styles
         // h5
         Array.from(bubble.getElementsByTagName('h5')).forEach(el => {
@@ -303,8 +300,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Unordered list
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
-            el.className += 'list-inside list-disc';
-            el.style.marginTop = '0';
+            if (!el.closest('[data-accordion]')) {  // Don't apply to accordion lists
+                el.className += 'list-inside list-disc';
+                el.style.marginTop = '0';
+            }
         });
         // Ordered list
         Array.from(bubble.getElementsByTagName('ol')).forEach(el => {
@@ -327,9 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
         Array.from(bubble.getElementsByTagName('td')).forEach(el => {
             el.className += 'py-2 px-1';
         });
-
-
-
+    
         // Add bubble to DOM
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
