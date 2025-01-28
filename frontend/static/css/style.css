@@ -212,3 +212,46 @@
         display: none;
     }
 }
+
+/* References section styling */
+[data-accordion] button {
+    transition: background-color 0.2s;
+}
+
+[data-accordion] button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-accordion] svg {
+    transition: transform 0.2s;
+}
+
+[data-accordion] button[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+}
+
+/* Style for reference links */
+[data-accordion] a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+[data-accordion] a:hover {
+    text-decoration: underline;
+}
+
+/* List styling in accordion */
+[data-accordion] ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+[data-accordion] li {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-accordion] li:last-child {
+    border-bottom: none;
+}
