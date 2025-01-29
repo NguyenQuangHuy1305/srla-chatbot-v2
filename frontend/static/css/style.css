@@ -305,3 +305,22 @@
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* List styles */
+.assistant-message ol {
+    list-style-position: outside;
+    margin-left: 1rem;
+}
+
+.assistant-message ol li {
+    margin-bottom: 0.5rem;
+}
+
+.assistant-message ol li:last-child {
+    margin-bottom: 0;
+}
+
+/* Ensure numbers align properly with text */
+.assistant-message ol li::marker {
+    font-weight: bold;
+}

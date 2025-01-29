@@ -321,8 +321,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Ordered list
         Array.from(bubble.getElementsByTagName('ol')).forEach(el => {
-            el.className += 'list-inside list-decimal';
-            el.style.marginTop = '0';
+            el.className = 'list-decimal space-y-2 pl-5';  // Add left padding and vertical spacing
+        });
+
+        // List items
+        Array.from(bubble.getElementsByTagName('li')).forEach(el => {
+            el.className = 'pl-2';  // Add padding to align text with number
+            el.style.display = 'list-item';  // Ensure proper list display
         });
         // Tables
         Array.from(bubble.getElementsByTagName('table')).forEach(el => {
