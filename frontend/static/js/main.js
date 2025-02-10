@@ -130,58 +130,86 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     
         showTypingIndicator();
+        console.log('Starting request with message:', message);
+        console.log('Current chat history:', chatHistory);
     
         try {
+            console.log('Sending POST request to /api/chat...');
+            const requestBody = {
+                query: message,
+                chats: chatHistory
+            };
+            console.log('Request payload:', requestBody);
+    
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    query: message,
-                    chats: chatHistory
-                })
+                body: JSON.stringify(requestBody)
+            });
+    
+            console.log('Received response:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
             });
     
             removeTypingIndicator();
-    
             const responseText = await response.text();
-
+            console.log('Raw response text:', responseText);
+    
             // Check if response is empty or contains error indicators
-            if (!responseText || responseText.includes('Backend call failure')) {
+            if (!responseText) {
+                console.error('Empty response received');
                 throw new Error('The server is currently unavailable. Please try again in a few moments.');
             }
-
+    
+            if (responseText.includes('Backend call failure')) {
+                console.error('Backend call failure detected in response');
+                console.log('Full response containing failure:', responseText);
+                throw new Error('The server is currently unavailable. Please try again in a few moments.');
+            }
+    
             let data;
-            
             try {
                 data = JSON.parse(responseText);
+                console.log('Parsed response data:', data);
             } catch (parseError) {
-                console.error('Failed to parse JSON:', responseText);
+                console.error('JSON parse error:', parseError);
+                console.error('Failed to parse response text:', responseText);
                 throw new Error('Failed to parse server response');
             }
     
             // If there's an error in the response
             if (data.error) {
+                console.error('Error in response data:', data);
                 let errorMessage = data.error;
                 if (data.details) {
                     errorMessage += '\n' + data.details;
+                    console.error('Error details:', data.details);
                 }
                 
                 // Handle specific error types
                 switch(response.status) {
                     case 503:
+                        console.error('Service unavailable (503):', errorMessage);
                         errorMessage = 'Service is temporarily unavailable. Please try again in a few moments.';
                         break;
                     case 504:
+                        console.error('Gateway timeout (504):', errorMessage);
                         errorMessage = 'Request timed out. Please try again.';
                         break;
                     case 502:
+                        console.error('Bad gateway (502):', errorMessage);
                         errorMessage = 'Server is temporarily unavailable. Please try again later.';
                         break;
                     case 400:
+                        console.error('Bad request (400):', errorMessage);
                         errorMessage = 'Invalid request. Please check your input.';
                         break;
+                    default:
+                        console.error(`Unexpected error status ${response.status}:`, errorMessage);
                 }
                 
                 throw new Error(errorMessage);
@@ -189,24 +217,37 @@ document.addEventListener('DOMContentLoaded', function () {
     
             // Handle the success case
             const result = data.final_result?.output;
+            console.log('Processing final result:', result);
+            
             if (result?.status === 'success' && result?.summary) {
+                console.log('Success - Appending message with:', {
+                    summary: result.summary,
+                    references: result.references,
+                    pageInfo: result.page_info
+                });
+                
                 appendMessage('assistant', result.summary, sources = result.references, isHTML = true);
     
                 if (result.page_info) {
+                    console.log('Displaying pagination:', result.page_info);
                     displayPagination(result.page_info);
                 } else {
+                    console.log('No pagination info - hiding pagination container');
                     paginationContainer.classList.add('hidden');
                 }
             } else {
-                throw new Error('Received unexpected response format from server');
+                console.error('Invalid result format:', result);
+                throw new Error('Received unexpected response format from server (most likely the context token limit is hit)');
             }
     
         } catch (error) {
             removeTypingIndicator();
-            console.error('Error:', error);
+            console.error('Error in processMessage:', error);
+            console.error('Error stack:', error.stack);
             
             // Show user-friendly error message
             const errorMessage = error.message || 'An unexpected error occurred. Please try again.';
+            console.log('Displaying error message to user:', errorMessage);
             appendMessage('system', errorMessage);
             
             paginationContainer.classList.add('hidden');
