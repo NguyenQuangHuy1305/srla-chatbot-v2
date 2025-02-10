@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
     const MAX_CHAT_HISTORY = 5;
-
     const chatContainer = document.getElementById('chat-container');
     const userInput = document.getElementById('user-input');
     const sendButton = document.querySelector('button');
@@ -11,20 +10,38 @@ document.addEventListener('DOMContentLoaded', function () {
     const closePdfButton = document.getElementById('close-pdf');
 
     let chatHistory = [];
+    let debugLog = [];
+
+    function logDebugInfo(type, info) {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            type,
+            info
+        };
+        debugLog.push(logEntry);
+        console.log(`[${logEntry.timestamp}] ${type}:`, info);
+    }
+
+    function getDebugHeaders(headers) {
+        return Object.fromEntries(
+            Array.from(headers.entries())
+                .filter(([key]) => key.toLowerCase().startsWith('x-debug-'))
+        );
+    }
 
     function showTypingIndicator() {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'mb-4 text-left';
         typingDiv.id = 'typing-indicator';
-
+        
         const typingBubble = document.createElement('div');
         typingBubble.className = 'typing-indicator';
-
+        
         for (let i = 0; i < 3; i++) {
             const dot = document.createElement('span');
             typingBubble.appendChild(dot);
         }
-
+        
         typingDiv.appendChild(typingBubble);
         chatContainer.appendChild(typingDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -43,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        logDebugInfo('pagination', pageInfo);
         paginationContainer.classList.remove('hidden');
         paginationContainer.innerHTML = '';
 
@@ -88,24 +106,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openPdfViewer(url) {
-        // Extract document name from URL for the title
+        logDebugInfo('pdf_viewer_open', { url });
         const decodedUrl = decodeURIComponent(url);
         const documentName = decodedUrl.split('/').pop().split('?')[0];
 
-        // Update the PDF viewer title
         const pdfTitle = document.getElementById('pdf-title');
         pdfTitle.textContent = documentName;
 
-        // Load the PDF
         pdfViewer.src = url;
-
-        // Show the PDF section
         pdfSection.classList.remove('hidden');
         chatSection.classList.remove('w-full');
         chatSection.classList.add('w-1/2');
     }
 
     function closePdfViewer() {
+        logDebugInfo('pdf_viewer_close');
         pdfSection.classList.add('hidden');
         chatSection.classList.remove('w-1/2');
         chatSection.classList.add('w-full');
@@ -113,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function handlePaginationClick(query) {
+        logDebugInfo('pagination_click', { query });
         await processMessage(query, false);
     }
 
@@ -120,27 +136,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const message = userInput.value.trim();
         if (!message) return;
 
+        logDebugInfo('send_message', { message });
         userInput.value = '';
         await processMessage(message, true);
     }
 
     async function processMessage(message, showQuery) {
+        const requestStartTime = Date.now();
+        logDebugInfo('request_start', { message, showQuery });
+
         if (showQuery) {
             appendMessage('user', message);
         }
     
         showTypingIndicator();
-        console.log('Starting request with message:', message);
-        console.log('Current chat history:', chatHistory);
     
         try {
-            console.log('Sending POST request to /api/chat...');
             const requestBody = {
                 query: message,
                 chats: chatHistory
             };
-            console.log('Request payload:', requestBody);
-    
+            logDebugInfo('request_body', requestBody);
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -148,106 +165,108 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify(requestBody)
             });
-    
-            console.log('Received response:', {
+
+            const debugHeaders = getDebugHeaders(response.headers);
+            logDebugInfo('response_headers', {
+                ...debugHeaders,
                 status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers.entries())
+                statusText: response.statusText
             });
-    
+            
             removeTypingIndicator();
+            
             const responseText = await response.text();
-            console.log('Raw response text:', responseText);
-    
+            logDebugInfo('response_text', {
+                length: responseText.length,
+                preview: responseText.slice(0, 200)
+            });
+
             // Check if response is empty or contains error indicators
             if (!responseText) {
-                console.error('Empty response received');
+                logDebugInfo('error_empty_response');
                 throw new Error('The server is currently unavailable. Please try again in a few moments.');
             }
-    
+
             if (responseText.includes('Backend call failure')) {
-                console.error('Backend call failure detected in response');
-                console.log('Full response containing failure:', responseText);
+                logDebugInfo('backend_call_failure', { responseText });
                 throw new Error('The server is currently unavailable. Please try again in a few moments.');
             }
-    
+
             let data;
             try {
                 data = JSON.parse(responseText);
-                console.log('Parsed response data:', data);
+                logDebugInfo('parsed_response', {
+                    hasError: !!data.error,
+                    debugInfo: data.debug_info
+                });
             } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                console.error('Failed to parse response text:', responseText);
+                logDebugInfo('parse_error', {
+                    error: parseError.message,
+                    responsePreview: responseText.slice(0, 200)
+                });
                 throw new Error('Failed to parse server response');
             }
     
-            // If there's an error in the response
             if (data.error) {
-                console.error('Error in response data:', data);
                 let errorMessage = data.error;
                 if (data.details) {
                     errorMessage += '\n' + data.details;
-                    console.error('Error details:', data.details);
                 }
                 
-                // Handle specific error types
+                logDebugInfo('error_response', {
+                    error: data.error,
+                    details: data.details,
+                    debugInfo: data.debug_info
+                });
+                
                 switch(response.status) {
                     case 503:
-                        console.error('Service unavailable (503):', errorMessage);
                         errorMessage = 'Service is temporarily unavailable. Please try again in a few moments.';
                         break;
                     case 504:
-                        console.error('Gateway timeout (504):', errorMessage);
                         errorMessage = 'Request timed out. Please try again.';
                         break;
                     case 502:
-                        console.error('Bad gateway (502):', errorMessage);
                         errorMessage = 'Server is temporarily unavailable. Please try again later.';
                         break;
                     case 400:
-                        console.error('Bad request (400):', errorMessage);
                         errorMessage = 'Invalid request. Please check your input.';
                         break;
-                    default:
-                        console.error(`Unexpected error status ${response.status}:`, errorMessage);
                 }
                 
                 throw new Error(errorMessage);
             }
     
-            // Handle the success case
-            const result = data.final_result?.output;
-            console.log('Processing final result:', result);
-            
+            const result = data.data?.final_result?.output;
+            logDebugInfo('process_result', {
+                hasResult: !!result,
+                status: result?.status,
+                hasSummary: !!result?.summary,
+                hasReferences: !!result?.references,
+                hasPageInfo: !!result?.page_info
+            });
+
             if (result?.status === 'success' && result?.summary) {
-                console.log('Success - Appending message with:', {
-                    summary: result.summary,
-                    references: result.references,
-                    pageInfo: result.page_info
-                });
-                
-                appendMessage('assistant', result.summary, sources = result.references, isHTML = true);
+                appendMessage('assistant', result.summary, result.references, true);
     
                 if (result.page_info) {
-                    console.log('Displaying pagination:', result.page_info);
                     displayPagination(result.page_info);
                 } else {
-                    console.log('No pagination info - hiding pagination container');
                     paginationContainer.classList.add('hidden');
                 }
             } else {
-                console.error('Invalid result format:', result);
-                throw new Error('Received unexpected response format from server (most likely the context token limit is hit)');
+                throw new Error('Received unexpected response format from server');
             }
     
         } catch (error) {
             removeTypingIndicator();
-            console.error('Error in processMessage:', error);
-            console.error('Error stack:', error.stack);
+            logDebugInfo('error', {
+                message: error.message,
+                stack: error.stack,
+                timeTaken: Date.now() - requestStartTime
+            });
             
-            // Show user-friendly error message
             const errorMessage = error.message || 'An unexpected error occurred. Please try again.';
-            console.log('Displaying error message to user:', errorMessage);
             appendMessage('system', errorMessage);
             
             paginationContainer.classList.add('hidden');
@@ -255,9 +274,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function appendMessage(role, content, sources = [], isHTML = false) {
-        // Append to chat history
+        logDebugInfo('append_message', { role, contentLength: content.length, sourcesCount: sources.length });
+        
         chatHistory.push({
-            "role": role == "user" ? "user" : "assistant",
+            "role": role === "user" ? "user" : "assistant",
             "content": [
                 {
                     "type": "text",
@@ -267,7 +287,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
     
-        // Embed into the web page
         const messageDiv = document.createElement('div');
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
     
@@ -279,9 +298,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 : 'bg-gray-300 text-gray-800'
             }`;
     
-        content_markdown = content;
-    
-        // Add sources
+        // Add sources if available
         const messageId = crypto.randomUUID();
         let sources_html = document.createElement('div');
         if (sources.length > 0) {
@@ -307,7 +324,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="py-2 px-3 text-sm">
                                 <ul class="space-y-2 list-none">
                                     ${sources.map(source => {
-                                        // Extract URL and text from the markdown-style link
                                         const match = source.match(/\[(.*?)\]\((.*?)\)/);
                                         if (match) {
                                             const [_, text, url] = match;
@@ -330,11 +346,9 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
     
-        // Inject in converted markdown
-        bubble.innerHTML = marked.parse(content_markdown);
+        bubble.innerHTML = marked.parse(content);
         bubble.appendChild(sources_html);
     
-        // Add click handlers to any PDF links
         if (isHTML) {
             const links = bubble.getElementsByTagName('a');
             Array.from(links).forEach(link => {
@@ -348,56 +362,42 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     
-        // Inject CSS styles
-        // h5
+        // Style adjustments
         Array.from(bubble.getElementsByTagName('h5')).forEach(el => {
             el.className += 'text-lg';
         });
-        // Unordered list
         Array.from(bubble.getElementsByTagName('ul')).forEach(el => {
-            if (!el.closest('[data-accordion]')) {  // Don't apply to lists inside accordion
+            if (!el.closest('[data-accordion]')) {
                 el.className += 'list-inside list-disc';
                 el.style.marginTop = '0';
             }
         });
-        // Ordered list
         Array.from(bubble.getElementsByTagName('ol')).forEach(el => {
-            el.className = 'list-decimal space-y-2 pl-5';  // Add left padding and vertical spacing
+            el.className = 'list-decimal space-y-2 pl-5';
         });
-
-        // List items
         Array.from(bubble.getElementsByTagName('li')).forEach(el => {
-            el.className = 'pl-2';  // Add padding to align text with number
-            el.style.display = 'list-item';  // Ensure proper list display
+            el.className = 'pl-2';
+            el.style.display = 'list-item';
         });
-        // Tables
         Array.from(bubble.getElementsByTagName('table')).forEach(el => {
             el.className = 'min-w-full table-auto border-collapse bg-white bg-opacity-50 rounded-lg overflow-hidden';
             el.style.marginTop = '1rem';
             el.style.marginBottom = '1rem';
         });
-
-        // Table rows
         Array.from(bubble.getElementsByTagName('tr')).forEach(el => {
             el.className = 'border-b border-gray-300 hover:bg-gray-50';
         });
-
-        // Table headers
         Array.from(bubble.getElementsByTagName('th')).forEach(el => {
             el.className = 'px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider bg-gray-100';
         });
-
-        // Table cells
         Array.from(bubble.getElementsByTagName('td')).forEach(el => {
             el.className = 'px-4 py-3 text-sm text-gray-900 whitespace-normal';
         });
     
-        // Add bubble to DOM
         messageDiv.appendChild(bubble);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     
-        // Re-initialize Flowbite
         if (sources.length > 0) {
             initFlowbite();
         }
@@ -411,4 +411,95 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     closePdfButton.addEventListener('click', closePdfViewer);
+
+    // Add debug keyboard shortcut (Ctrl+Shift+D)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+            console.log('=== Debug Log ===');
+            console.table(debugLog);
+            
+            // Create debug data blob for download
+            const debugData = JSON.stringify({
+                log: debugLog,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                windowSize: {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                },
+                chatHistory: chatHistory
+            }, null, 2);
+            
+            const blob = new Blob([debugData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chat-debug-${new Date().toISOString()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    });
+
+    // Add visual feedback for debug shortcut
+    const debugIndicator = document.createElement('div');
+    debugIndicator.style.cssText = `
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        display: none;
+        z-index: 1000;
+    `;
+    debugIndicator.textContent = 'Debug logs downloaded';
+    document.body.appendChild(debugIndicator);
+
+    // Show indicator when logs are downloaded
+    function showDebugIndicator() {
+        debugIndicator.style.display = 'block';
+        setTimeout(() => {
+            debugIndicator.style.display = 'none';
+        }, 2000);
+    }
+
+    // Error boundary for unexpected errors
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+        logDebugInfo('global_error', {
+            message: msg,
+            url: url,
+            line: lineNo,
+            column: columnNo,
+            error: error?.stack || 'No stack trace available'
+        });
+        return false;
+    };
+
+    // Unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+        logDebugInfo('unhandled_promise_rejection', {
+            reason: event.reason?.message || event.reason,
+            stack: event.reason?.stack || 'No stack trace available'
+        });
+    });
+
+    // Performance monitoring
+    if (window.PerformanceObserver) {
+        const perfObserver = new PerformanceObserver((list) => {
+            list.getEntries().forEach((entry) => {
+                logDebugInfo('performance', {
+                    type: entry.entryType,
+                    name: entry.name,
+                    duration: entry.duration,
+                    startTime: entry.startTime
+                });
+            });
+        });
+
+        perfObserver.observe({ entryTypes: ['navigation', 'resource', 'longtask'] });
+    }
 });
