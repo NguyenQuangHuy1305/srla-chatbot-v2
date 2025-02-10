@@ -248,12 +248,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (result?.status === 'success' && result?.summary) {
                 appendMessage('assistant', result.summary, result.references, true);
-    
+            
                 if (result.page_info) {
                     displayPagination(result.page_info);
                 } else {
                     paginationContainer.classList.add('hidden');
                 }
+            } else if (result?.status === 'error') {
+                let errorMessage;
+                
+                // Check if it's a token limit error
+                if (result.error && result.error.includes('maximum context length') && 
+                    result.error.includes('tokens')) {
+                    errorMessage = 
+                        "Your query requires too much context to process. Please try to:\n\n" +
+                        "1. Be more specific in your question\n" +
+                        "2. Focus on a particular aspect or topic\n" +
+                        "3. Limit the time period or scope of your query";
+                } else {
+                    errorMessage = 'An error occurred while processing your request. Please try again.';
+                }
+                
+                appendMessage('system', errorMessage);
+                paginationContainer.classList.add('hidden');
             } else {
                 throw new Error('Received unexpected response format from server');
             }
@@ -291,13 +308,24 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
     
         const bubble = document.createElement('div');
-        bubble.className = `inline-block space-y-2 p-3 rounded-lg max-w-3/4 ${role === 'user'
-            ? 'bg-blue-500 text-white'
-            : role === 'system'
-                ? 'bg-gray-200 text-gray-700'
-                : 'bg-gray-300 text-gray-800'
-            }`;
-    
+        bubble.className = `inline-block space-y-2 p-3 rounded-lg max-w-3/4 ${
+            role === 'user'
+                ? 'bg-blue-500 text-white'
+                : role === 'system'
+                    ? 'bg-red-100 text-red-800' // Style system messages (errors) differently
+                    : 'bg-gray-300 text-gray-800'
+        }`;
+
+        // Convert numbered lists in error messages to proper markdown
+        if (role === 'system' && content.includes('\n1.')) {
+            content = content.split('\n').map(line => {
+                if (/^\d+\./.test(line)) {
+                    return line.trim();
+                }
+                return line;
+            }).join('\n');
+        }
+
         // Add sources if available
         const messageId = crypto.randomUUID();
         let sources_html = document.createElement('div');
