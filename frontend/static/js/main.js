@@ -339,23 +339,29 @@ document.addEventListener('DOMContentLoaded', function () {
             return text;
         }
     
-        // Process content if it's from assistant and is long
-        let processedContent = content;
+        // Create a trimmed version for chat history if needed
+        let chatHistoryContent = content;
+        if (role === 'assistant' && content.length > 10000 && content.includes('|')) {
+            chatHistoryContent = trimMarkdownTable(content);
+            logDebugInfo('chat_history_trimmed', {
+                originalLength: content.length,
+                newLength: chatHistoryContent.length
+            });
+        }
+        
+        // Process display content
+        let displayContent = content;
         let isLongResponse = false;
         
         if (role === 'assistant' && content.length > 10000) {
             isLongResponse = true;
-            // First trim tables if they exist
-            if (content.includes('|')) {
-                processedContent = trimMarkdownTable(content);
-            }
             // Add warning message about context limitation
-            processedContent += '\n\n---\n*Note: Due to OpenAI\'s context token limits, some parts of this response may not be included in the chat context for future messages.*';
+            displayContent += '\n\n---\n*Note: Due to OpenAI\'s context token limits, some parts of this response may not be included in the chat context for future messages.*';
             
             logDebugInfo('content_processed', { 
                 originalLength: content.length, 
-                newLength: processedContent.length,
-                wasTableTrimmed: content !== processedContent
+                newLength: displayContent.length,
+                wasTableTrimmed: false
             });
         }
         
@@ -364,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
             "content": [
                 {
                     "type": "text",
-                    "text": processedContent
+                    "text": chatHistoryContent
                 }
             ]
         });
@@ -383,8 +389,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }`;
     
         // Convert numbered lists in error messages to proper markdown
-        if (role === 'system' && processedContent.includes('\n1.')) {
-            processedContent = processedContent.split('\n').map(line => {
+        if (role === 'system' && displayContent.includes('\n1.')) {
+            displayContent = displayContent.split('\n').map(line => {
                 if (/^\d+\./.test(line)) {
                     return line.trim();
                 }
@@ -440,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
     
-        bubble.innerHTML = marked.parse(processedContent);
+        bubble.innerHTML = marked.parse(displayContent);
         bubble.appendChild(sources_html);
     
         if (isHTML) {
