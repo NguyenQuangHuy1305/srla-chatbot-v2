@@ -300,12 +300,71 @@ document.addEventListener('DOMContentLoaded', function () {
     function appendMessage(role, content, sources = [], isHTML = false) {
         logDebugInfo('append_message', { role, contentLength: content.length, sourcesCount: sources.length });
         
+        // Function to trim markdown table to first 20 rows
+        function trimMarkdownTable(text) {
+            const lines = text.split('\n');
+            let isInTable = false;
+            let tableStartIndex = -1;
+            let headerRows = [];
+            let tableRows = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.includes('|')) {  // Potential table row
+                    if (!isInTable) {
+                        isInTable = true;
+                        tableStartIndex = i;
+                        headerRows.push(line);  // First row is header
+                    } else if (line.includes('|-')) {
+                        headerRows.push(line);  // Separator row
+                    } else {
+                        tableRows.push(line);
+                    }
+                } else if (isInTable) {
+                    // We've reached the end of the table
+                    break;
+                }
+            }
+    
+            if (tableRows.length > 20) {
+                // Keep headers and first 20 data rows
+                const trimmedTable = [...headerRows, ...tableRows.slice(0, 20)];
+                trimmedTable.push('... (table trimmed to first 20 rows)');
+                
+                // Replace the table in the original text
+                lines.splice(tableStartIndex, headerRows.length + tableRows.length, ...trimmedTable);
+                return lines.join('\n');
+            }
+            
+            return text;
+        }
+    
+        // Process content if it's from assistant and is long
+        let processedContent = content;
+        let isLongResponse = false;
+        
+        if (role === 'assistant' && content.length > 10000) {
+            isLongResponse = true;
+            // First trim tables if they exist
+            if (content.includes('|')) {
+                processedContent = trimMarkdownTable(content);
+            }
+            // Add warning message about context limitation
+            processedContent += '\n\n---\n*Note: Due to OpenAI\'s context token limits, some parts of this response may not be included in the chat context for future messages.*';
+            
+            logDebugInfo('content_processed', { 
+                originalLength: content.length, 
+                newLength: processedContent.length,
+                wasTableTrimmed: content !== processedContent
+            });
+        }
+        
         chatHistory.push({
             "role": role === "user" ? "user" : "assistant",
             "content": [
                 {
                     "type": "text",
-                    "text": content
+                    "text": processedContent
                 }
             ]
         });
@@ -322,17 +381,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? 'bg-red-100 text-red-800' // Style system messages (errors) differently
                     : 'bg-gray-300 text-gray-800'
         }`;
-
+    
         // Convert numbered lists in error messages to proper markdown
-        if (role === 'system' && content.includes('\n1.')) {
-            content = content.split('\n').map(line => {
+        if (role === 'system' && processedContent.includes('\n1.')) {
+            processedContent = processedContent.split('\n').map(line => {
                 if (/^\d+\./.test(line)) {
                     return line.trim();
                 }
                 return line;
             }).join('\n');
         }
-
+    
         // Add sources if available
         const messageId = crypto.randomUUID();
         let sources_html = document.createElement('div');
@@ -381,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
     
-        bubble.innerHTML = marked.parse(content);
+        bubble.innerHTML = marked.parse(processedContent);
         bubble.appendChild(sources_html);
     
         if (isHTML) {
