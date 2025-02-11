@@ -257,8 +257,15 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (result?.status === 'error') {
                 let errorMessage;
                 
+                // Check if it's a "No documents found" error
+                if (result.error && result.error.includes('No documents found in document_list')) {
+                    errorMessage = 'No documents were found matching your description. Please try:\n\n' +
+                                 '1. Using different keywords\n' +
+                                 '2. Checking your spelling\n' +
+                                 '3. Making your search broader';
+                }
                 // Check if it's a token limit error
-                if (result.error && result.error.includes('maximum context length') && 
+                else if (result.error && result.error.includes('maximum context length') && 
                     result.error.includes('tokens')) {
                     errorMessage = 
                         "Your query requires too much context to process. Please try to:\n\n" +
