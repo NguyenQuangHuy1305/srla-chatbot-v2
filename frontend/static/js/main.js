@@ -145,9 +145,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const requestStartTime = Date.now();
         logDebugInfo('request_start', { message, showQuery });
 
-        if (showQuery) {
-            appendMessage('user', message);
-        }
+        appendMessage('user', message);
+    
+        // First add message to chat history
+        chatHistory.push({
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": message
+                }
+            ]
+        });
+        chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
     
         showTypingIndicator();
     
