@@ -1,13 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Create root element for password screen
-    const root = document.createElement('div');
-    root.id = 'password-screen-root';
-    document.body.insertBefore(root, document.body.firstChild);
-
-    // Initialize React component
-    const passwordScreen = React.createElement(PasswordScreen);
-    ReactDOM.render(passwordScreen, root);
-
     const MAX_CHAT_HISTORY = 5;
     const chatContainer = document.getElementById('chat-container');
     const userInput = document.getElementById('user-input');
@@ -21,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let chatHistory = [];
     let debugLog = [];
 
-    // Disable chat interface elements initially
+    // Authentication related functions
     function disableChatInterface() {
         userInput.disabled = true;
         sendButton.disabled = true;
@@ -29,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function () {
         chatContainer.style.pointerEvents = 'none';
     }
 
-    // Enable chat interface elements
     function enableChatInterface() {
         userInput.disabled = false;
         sendButton.disabled = false;
@@ -37,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
         chatContainer.style.pointerEvents = 'auto';
     }
 
-    // Check authentication status
     function checkAuth() {
         const isAuthenticated = sessionStorage.getItem('chatbot_authenticated') === 'true';
         if (isAuthenticated) {
@@ -51,11 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
     checkAuth();
 
     // Listen for authentication events
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'chatbot_authenticated') {
-            checkAuth();
-        }
-    });
+    window.addEventListener('authStatusChanged', checkAuth);
 
     function logDebugInfo(type, info) {
         const logEntry = {
