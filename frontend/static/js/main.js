@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Check if response is empty or contains error indicators
             if (!responseText) {
                 logDebugInfo('error_empty_response');
-                throw new Error('The server is currently unavailable. Please try again in a few moments.');
+                throw new Error('error_empty_response');
             }
 
             if (responseText.includes('Backend call failure')) {
