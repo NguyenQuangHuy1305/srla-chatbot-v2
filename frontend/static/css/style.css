@@ -51,8 +51,10 @@
     border-radius: 12px;
     margin: 8px 0;
     max-width: 100%;
-    white-space: pre-wrap;
-    overflow-x: auto;
+    white-space: normal; /* Changed from pre-wrap */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .user-message {
@@ -61,12 +63,20 @@
     border-radius: 12px;
     margin: 8px 0 8px auto;
     max-width: 100%;
-    white-space: pre-wrap;
+    white-space: normal; /* Changed from pre-wrap */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 /* Markdown and content styling */
 .assistant-message {
-    overflow-x: auto;
+    width: 100%;
+    overflow-x: visible; /* Changed from auto */
+}
+
+.assistant-message code {
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .assistant-message table {
@@ -74,6 +84,8 @@
     margin: 1rem 0;
     border-collapse: collapse;
     background-color: white;
+    display: block;
+    overflow-x: auto;
 }
 
 .assistant-message th {
@@ -89,6 +101,8 @@
     padding: 8px 12px;
     border: 1px solid #e5e7eb;
     background-color: white;
+    white-space: normal; /* Allow text wrapping in cells */
+    min-width: 100px; /* Ensure minimum width for readability */
 }
 
 .assistant-message h1, 
@@ -96,22 +110,28 @@
 .assistant-message h3 {
     margin: 1rem 0;
     font-weight: bold;
+    word-wrap: break-word;
 }
 
 .assistant-message p {
     margin: 0.75rem 0;
-    white-space: pre-wrap;
-    word-break: break-word;
+    white-space: normal; /* Changed from pre-wrap */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .assistant-message ul, 
 .assistant-message ol {
     margin: 0.75rem 0;
     padding-left: 1.5rem;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .assistant-message li {
     margin: 0.5rem 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 /* Chat container scrollbar */
@@ -158,11 +178,16 @@
     #chat-container {
         height: calc(100vh - 12rem);
     }
+
+    .bot-message,
+    .user-message {
+        max-width: 100%;
+    }
 }
 
 /* Increase chat container width on larger screens */
 @media (min-width: 768px) {
     .max-w-4xl {
-        max-width: 56rem;
+        max-width: 64rem; /* Increased from 56rem */
     }
 }
