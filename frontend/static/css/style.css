@@ -1,13 +1,14 @@
 /* Base message styles */
-.bot-message, .user-message {
+.bot-message, .user-message, .assistant-message {
     background-color: #f3f4f6;
     padding: 12px 16px;
     border-radius: 12px;
     margin: 8px 0;
-    width: 100%;
+    max-width: 100%;
     overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
+    hyphens: auto;
 }
 
 .user-message {
@@ -87,12 +88,16 @@
 /* Text content styles */
 .assistant-message p,
 .assistant-message li,
+.assistant-message div,
+.assistant-message span,
 .assistant-message h1,
 .assistant-message h2,
 .assistant-message h3 {
     overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
     margin: 0.75rem 0;
 }
 
@@ -103,9 +108,16 @@
 }
 
 /* Code block styles */
-.assistant-message code {
+.assistant-message code,
+.assistant-message pre {
     white-space: pre-wrap;
     word-break: break-word;
+    max-width: 100%;
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
 }
 
 /* Typing indicator */
