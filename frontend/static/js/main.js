@@ -359,6 +359,47 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function handleTableRows(table) {
+        const MAX_VISIBLE_ROWS = 20;
+        const rows = table.querySelectorAll('tbody tr');
+        
+        if (rows.length <= MAX_VISIBLE_ROWS) return; // No need to add show more button
+        
+        // Hide extra rows
+        rows.forEach((row, index) => {
+            if (index >= MAX_VISIBLE_ROWS) {
+                row.classList.add('table-row-hidden');
+            }
+        });
+        
+        // Add fade effect to last visible row
+        rows[MAX_VISIBLE_ROWS - 1].classList.add('table-fade-row');
+        
+        // Create and add the show more/less button
+        const button = document.createElement('button');
+        button.className = 'show-more-button';
+        button.textContent = 'Show All';
+        
+        let isExpanded = false;
+        
+        button.addEventListener('click', () => {
+            isExpanded = !isExpanded;
+            rows.forEach((row, index) => {
+                if (index >= MAX_VISIBLE_ROWS) {
+                    row.classList.toggle('table-row-hidden');
+                }
+            });
+            
+            // Toggle fade effect on the last visible row
+            rows[MAX_VISIBLE_ROWS - 1].classList.toggle('table-fade-row');
+            
+            button.textContent = isExpanded ? 'Show Less' : 'Show All';
+        });
+        
+        // Insert button after the table
+        table.parentNode.insertBefore(button, table.nextSibling);
+    }
+
     function appendMessage(role, content, sources = [], isHTML = false) {
         logDebugInfo('append_message', { role, contentLength: content.length, sourcesCount: sources.length });
         
@@ -446,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
             role === 'user'
                 ? 'bg-blue-500 text-white'
                 : role === 'system'
-                    ? 'bg-red-100 text-red-800' // Style system messages (errors) differently
+                    ? 'bg-red-100 text-red-800'
                     : 'bg-gray-300 text-gray-800'
         }`;
     
@@ -541,26 +582,65 @@ document.addEventListener('DOMContentLoaded', function () {
             el.className = 'pl-2';
             el.style.display = 'list-item';
         });
-        Array.from(bubble.getElementsByTagName('table')).forEach(el => {
-            el.className = 'table-auto border-collapse bg-white bg-opacity-50 rounded-lg';
-            // Add a container div for better table handling
+    
+        // Handle tables with show more/less functionality
+        Array.from(bubble.getElementsByTagName('table')).forEach(table => {
+            table.className = 'table-auto border-collapse bg-white bg-opacity-50 rounded-lg';
+            
+            // Add table wrapper
             const wrapper = document.createElement('div');
             wrapper.className = 'table-wrapper';
-            el.parentNode.insertBefore(wrapper, el);
-            wrapper.appendChild(el);
-        });
-        Array.from(bubble.getElementsByTagName('tr')).forEach(el => {
-            el.className = 'border-b border-gray-300 hover:bg-gray-50';
-        });
-        Array.from(bubble.getElementsByTagName('th')).forEach(el => {
-            el.className = 'px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider bg-gray-100';
-            // Remove any inline styles that might interfere
-            el.style = '';
-        });
-        Array.from(bubble.getElementsByTagName('td')).forEach(el => {
-            el.className = 'px-4 py-3 text-sm text-gray-900';
-            // Remove any inline styles that might interfere
-            el.style = '';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+    
+            // Handle table rows visibility
+            const rows = table.querySelectorAll('tbody tr');
+            const MAX_VISIBLE_ROWS = 20;
+    
+            if (rows.length > MAX_VISIBLE_ROWS) {
+                // Hide extra rows
+                rows.forEach((row, index) => {
+                    if (index >= MAX_VISIBLE_ROWS) {
+                        row.classList.add('table-row-hidden');
+                    }
+                });
+    
+                // Add fade effect to last visible row
+                rows[MAX_VISIBLE_ROWS - 1].classList.add('table-fade-row');
+    
+                // Create and add the show more/less button
+                const button = document.createElement('button');
+                button.className = 'show-more-button';
+                button.textContent = 'Show All';
+    
+                let isExpanded = false;
+    
+                button.addEventListener('click', () => {
+                    isExpanded = !isExpanded;
+                    rows.forEach((row, index) => {
+                        if (index >= MAX_VISIBLE_ROWS) {
+                            row.classList.toggle('table-row-hidden');
+                        }
+                    });
+    
+                    // Toggle fade effect on the last visible row
+                    rows[MAX_VISIBLE_ROWS - 1].classList.toggle('table-fade-row');
+                    button.textContent = isExpanded ? 'Show Less' : 'Show All';
+                });
+    
+                // Insert button after the table
+                table.parentNode.insertBefore(button, table.nextSibling);
+            }
+    
+            // Apply existing table styles
+            Array.from(table.getElementsByTagName('th')).forEach(el => {
+                el.className = 'px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider bg-gray-100';
+                el.style = '';
+            });
+            Array.from(table.getElementsByTagName('td')).forEach(el => {
+                el.className = 'px-4 py-3 text-sm text-gray-900';
+                el.style = '';
+            });
         });
     
         messageDiv.appendChild(bubble);
