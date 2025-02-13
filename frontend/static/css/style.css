@@ -1,7 +1,7 @@
-/* Custom styles for the typing animation */
+/* Typing indicator animation */
 .typing-indicator {
     display: flex;
-    align-items: center;  /* Vertically center the dots and text */
+    align-items: center;
     gap: 4px;
     padding: 12px 16px;
     background: #e2e8f0;
@@ -14,22 +14,16 @@
 .typing-indicator::after {
     content: "This might take a moment...";
     position: absolute;
-    left: calc(100% + 12px);  /* Position text relative to the bubble */
-    top: 50%;  /* Center vertically */
-    transform: translateY(-50%);  /* Adjust for perfect vertical centering */
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
     white-space: nowrap;
     color: #64748b;
     opacity: 0;
     animation: fadeIn 1s forwards;
     animation-delay: 5s;
-    font-size: 14px;  /* Match the size of your other text */
-    line-height: 1;   /* Prevent any extra spacing */
-}
-
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-    }
+    font-size: 14px;
+    line-height: 1;
 }
 
 .typing-indicator span {
@@ -38,8 +32,8 @@
     background: #94a3b8;
     border-radius: 50%;
     animation: bounce 1.3s linear infinite;
-    display: inline-block;  /* Ensure consistent alignment */
-    vertical-align: middle; /* Align dots vertically */
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .typing-indicator span:nth-child(2) {
@@ -50,22 +44,15 @@
     animation-delay: 0.3s;
 }
 
-@keyframes bounce {
-    0%, 60%, 100% {
-        transform: translateY(0);
-    }
-    30% {
-        transform: translateY(-4px);
-    }
-}
-
+/* Message bubbles */
 .bot-message {
     background-color: #f3f4f6;
     padding: 12px 16px;
     border-radius: 12px;
     margin: 8px 0;
-    max-width: 80%;
+    max-width: 100%;
     white-space: pre-wrap;
+    overflow-x: auto;
 }
 
 .user-message {
@@ -73,11 +60,61 @@
     padding: 12px 16px;
     border-radius: 12px;
     margin: 8px 0 8px auto;
-    max-width: 80%;
+    max-width: 100%;
     white-space: pre-wrap;
 }
 
-/* Custom scrollbar styles */
+/* Markdown and content styling */
+.assistant-message {
+    overflow-x: auto;
+}
+
+.assistant-message table {
+    width: 100%;
+    margin: 1rem 0;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+.assistant-message th {
+    background-color: #f3f4f6;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.assistant-message td {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    background-color: white;
+}
+
+.assistant-message h1, 
+.assistant-message h2, 
+.assistant-message h3 {
+    margin: 1rem 0;
+    font-weight: bold;
+}
+
+.assistant-message p {
+    margin: 0.75rem 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.assistant-message ul, 
+.assistant-message ol {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.assistant-message li {
+    margin: 0.5rem 0;
+}
+
+/* Chat container scrollbar */
 #chat-container::-webkit-scrollbar {
     width: 8px;
 }
@@ -96,236 +133,36 @@
     background: #555;
 }
 
-/* Markdown styling */
-.assistant-message h1, h2, h3 {
-    margin: 1rem 0;
-    font-weight: bold;
+/* Animations */
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
 }
 
-.assistant-message p {
-    margin: 0.75rem 0;
-}
-
-.assistant-message ul, ol {
-    margin: 0.75rem 0;
-    padding-left: 1.5rem;
-}
-
-.assistant-message li {
-    margin: 0.5rem 0;
-}
-
-/* Sources accordion styling */
-.sources-accordion {
-    margin-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 1rem;
-}
-
-.sources-header {
-    cursor: pointer;
-    padding: 0.5rem;
-    background-color: #f9fafb;
-    border-radius: 0.375rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.sources-header:hover {
-    background-color: #f3f4f6;
-}
-
-.sources-content {
-    padding: 1rem;
-    background-color: #ffffff;
-    border-radius: 0.375rem;
-    margin-top: 0.5rem;
-}
-
-.sources-list {
-    list-style-type: disc;
-    padding-left: 1.5rem;
-}
-
-.sources-list li {
-    margin: 0.5rem 0;
-    color: #4b5563;
-}
-
-/* PDF viewer styles */
-.pdf-container {
-    height: calc(100vh - 4rem);
-    background-color: #f9fafb;
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
-.pdf-toolbar {
-    padding: 0.75rem;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* Loading state styles */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 50;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-4px);
+    }
 }
 
 /* Mobile responsive adjustments */
 @media (max-width: 640px) {
-    .bot-message, .user-message {
-        max-width: 90%;
-    }
-
-    #chat-container {
-        height: calc(100vh - 12rem);
-    }
-
     .typing-indicator::after {
         display: none;
     }
-}
-
-/* References section styling */
-[data-accordion] button {
-    transition: background-color 0.2s;
-}
-
-[data-accordion] button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-[data-accordion] svg {
-    transition: transform 0.2s;
-}
-
-[data-accordion] button[aria-expanded="true"] svg {
-    transform: rotate(180deg);
-}
-
-/* Style for reference links */
-[data-accordion] a {
-    color: #2563eb;
-    text-decoration: none;
-}
-
-[data-accordion] a:hover {
-    text-decoration: underline;
-}
-
-/* List styling in accordion */
-[data-accordion] ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-[data-accordion] li {
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-[data-accordion] li:last-child {
-    border-bottom: none;
-}
-
-/* Accordion transitions */
-[data-accordion] button[aria-expanded="true"] svg {
-    transform: rotate(180deg);
-}
-
-[data-accordion] button svg {
-    transition: transform 0.2s ease-out;
-}
-
-[data-accordion] .hidden {
-    display: none;
-}
-
-[data-accordion] button[aria-expanded="true"] + div {
-    display: block;
-}
-
-/* Table styles */
-.assistant-message table {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    margin: 1rem 0;
-}
-
-.assistant-message table th {
-    position: relative;
-}
-
-.assistant-message table th:after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 100%;
-    height: 2px;
-    background-color: #e5e7eb;
-}
-
-.assistant-message table tr:last-child td {
-    border-bottom: none;
-}
-
-/* Handle overflow on mobile */
-@media (max-width: 640px) {
-    .assistant-message table {
-        display: block;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    
+    #chat-container {
+        height: calc(100vh - 12rem);
     }
 }
 
-/* List styles */
-.assistant-message ol {
-    list-style-position: outside;
-    margin-left: 1rem;
-}
-
-.assistant-message ol li {
-    margin-bottom: 0.5rem;
-}
-
-.assistant-message ol li:last-child {
-    margin-bottom: 0;
-}
-
-/* Ensure numbers align properly with text */
-.assistant-message ol li::marker {
-    font-weight: bold;
-}
-
-/* Add these styles for smooth transitions */
-.pdf-transition {
-    transition: all 0.3s ease-in-out;
+/* Increase chat container width on larger screens */
+@media (min-width: 768px) {
+    .max-w-4xl {
+        max-width: 56rem;
+    }
 }
