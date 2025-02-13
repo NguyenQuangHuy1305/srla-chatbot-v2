@@ -403,69 +403,85 @@ document.addEventListener('DOMContentLoaded', function () {
     function appendMessage(role, content, sources = [], isHTML = false) {
         logDebugInfo('append_message', { role, contentLength: content.length, sourcesCount: sources.length });
         
-        // Function to trim markdown table to first 20 rows
-        function trimMarkdownTable(text) {
+        // Function to estimate tokens in a string
+        function estimateTokenCount(text) {
+            // Rough estimation: Split by whitespace and punctuation
+            const tokens = text.split(/[\s,.!?;:()\[\]{}'"/<>|\\_+=~`@#$%^&*-]+/);
+            // Filter out empty strings and count remaining tokens
+            return tokens.filter(token => token.length > 0).length;
+        }
+    
+        // Function to trim content to token limit
+        function trimToTokenLimit(text, tokenLimit) {
             const lines = text.split('\n');
-            let isInTable = false;
-            let tableStartIndex = -1;
+            let totalTokens = 0;
+            let resultLines = [];
             let headerRows = [];
-            let tableRows = [];
+            let isInTable = false;
             
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                if (line.includes('|')) {  // Potential table row
+                const lineTokens = estimateTokenCount(line);
+                
+                // Handle table headers
+                if (line.includes('|')) {
                     if (!isInTable) {
                         isInTable = true;
-                        tableStartIndex = i;
-                        headerRows.push(line);  // First row is header
+                        headerRows = [line];  // Store first header row
+                        continue;
                     } else if (line.includes('|-')) {
-                        headerRows.push(line);  // Separator row
-                    } else {
-                        tableRows.push(line);
+                        headerRows.push(line);  // Store separator row
+                        continue;
                     }
-                } else if (isInTable) {
-                    // We've reached the end of the table
+                } else if (line.trim() === '') {
+                    isInTable = false;
+                }
+                
+                // If we're about to exceed the token limit
+                if (totalTokens + lineTokens > tokenLimit) {
+                    if (isInTable) {
+                        // If we're in a table, add the headers before stopping
+                        resultLines.push(...headerRows);
+                    }
+                    resultLines.push('\n... (Content trimmed to fit token limit)');
                     break;
                 }
-            }
-    
-            if (tableRows.length > 20) {
-                // Keep headers and first 20 data rows
-                const trimmedTable = [...headerRows, ...tableRows.slice(0, 20)];
-                trimmedTable.push('... (table trimmed to first 20 rows)');
                 
-                // Replace the table in the original text
-                lines.splice(tableStartIndex, headerRows.length + tableRows.length, ...trimmedTable);
-                return lines.join('\n');
+                // Add headers if this is the first row after headers
+                if (isInTable && headerRows.length > 0) {
+                    resultLines.push(...headerRows);
+                    headerRows = [];
+                }
+                
+                resultLines.push(line);
+                totalTokens += lineTokens;
             }
             
-            return text;
+            return resultLines.join('\n');
         }
     
-        // Create a trimmed version for chat history if needed
+        // Create a trimmed version for chat history
         let chatHistoryContent = content;
-        if (role === 'assistant' && content.length > 10000 && content.includes('|')) {
-            chatHistoryContent = trimMarkdownTable(content);
-            logDebugInfo('chat_history_trimmed', {
-                originalLength: content.length,
-                newLength: chatHistoryContent.length
-            });
+        const TOKEN_LIMIT = 20000;
+        
+        if (role === 'assistant') {
+            const estimatedTokens = estimateTokenCount(content);
+            if (estimatedTokens > TOKEN_LIMIT) {
+                chatHistoryContent = trimToTokenLimit(content, TOKEN_LIMIT);
+                logDebugInfo('chat_history_trimmed', {
+                    originalTokens: estimatedTokens,
+                    newTokens: estimateTokenCount(chatHistoryContent)
+                });
+            }
         }
         
         // Process display content
         let displayContent = content;
         let isLongResponse = false;
         
-        if (role === 'assistant' && content.length > 10000) {
+        if (role === 'assistant' && estimateTokenCount(content) > TOKEN_LIMIT) {
             isLongResponse = true;
-            // Add warning message about context limitation
-            displayContent += '\n\n---\n*Note: Due to OpenAI\'s context token limits, some parts of this response may not be included in the chat context for future messages.*';
-            
-            logDebugInfo('content_processed', { 
-                originalLength: content.length, 
-                newLength: displayContent.length,
-                wasTableTrimmed: false
-            });
+            displayContent += '\n\n---\n*Note: Due to token limits, some parts of this response may not be included in the chat context for future messages.*';
         }
         
         chatHistory.push({
