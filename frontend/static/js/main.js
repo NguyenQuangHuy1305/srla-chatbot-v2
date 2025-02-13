@@ -542,10 +542,10 @@ document.addEventListener('DOMContentLoaded', function () {
             el.style.display = 'list-item';
         });
         Array.from(bubble.getElementsByTagName('table')).forEach(el => {
-            el.className = 'table-auto border-collapse bg-white bg-opacity-50 rounded-lg overflow-hidden w-full';
-            // Add a container div for horizontal scrolling
+            el.className = 'table-auto border-collapse bg-white bg-opacity-50 rounded-lg';
+            // Add a container div for better table handling
             const wrapper = document.createElement('div');
-            wrapper.className = 'overflow-x-auto';
+            wrapper.className = 'table-wrapper';
             el.parentNode.insertBefore(wrapper, el);
             wrapper.appendChild(el);
         });
@@ -554,9 +554,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         Array.from(bubble.getElementsByTagName('th')).forEach(el => {
             el.className = 'px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider bg-gray-100';
+            // Remove any inline styles that might interfere
+            el.style = '';
         });
         Array.from(bubble.getElementsByTagName('td')).forEach(el => {
             el.className = 'px-4 py-3 text-sm text-gray-900';
+            // Remove any inline styles that might interfere
+            el.style = '';
         });
     
         messageDiv.appendChild(bubble);
