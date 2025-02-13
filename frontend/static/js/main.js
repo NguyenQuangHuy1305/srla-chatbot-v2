@@ -143,18 +143,40 @@ document.addEventListener('DOMContentLoaded', function () {
         const pdfTitle = document.getElementById('pdf-title');
         pdfTitle.textContent = documentName;
 
+        // Add transition class before making changes
+        chatSection.classList.add('pdf-transition');
+        pdfSection.classList.add('pdf-transition');
+
         pdfViewer.src = url;
         pdfSection.classList.remove('hidden');
-        chatSection.classList.remove('w-full');
-        chatSection.classList.add('w-1/2');
+        
+        // Use requestAnimationFrame to ensure smooth transition
+        requestAnimationFrame(() => {
+            chatSection.style.width = '50%';
+            pdfSection.style.width = '50%';
+        });
     }
 
     function closePdfViewer() {
         logDebugInfo('pdf_viewer_close');
-        pdfSection.classList.add('hidden');
-        chatSection.classList.remove('w-1/2');
-        chatSection.classList.add('w-full');
-        pdfViewer.src = '';
+        
+        // Add transition class if not already present
+        chatSection.classList.add('pdf-transition');
+        pdfSection.classList.add('pdf-transition');
+    
+        // Animate width changes
+        chatSection.style.width = '100%';
+        pdfSection.style.width = '0';
+    
+        // Wait for transition to complete before hiding
+        setTimeout(() => {
+            pdfSection.classList.add('hidden');
+            pdfViewer.src = '';
+            
+            // Clean up transition classes
+            chatSection.classList.remove('pdf-transition');
+            pdfSection.classList.remove('pdf-transition');
+        }, 300); // Match the transition duration
     }
 
     async function handlePaginationClick(query) {
