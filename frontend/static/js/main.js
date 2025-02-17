@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (role === 'assistant' && estimateTokenCount(content) > TOKEN_LIMIT) {
             isLongResponse = true;
-            displayContent += '\n\n---\n*Note: Due to token limits, some parts of this response may not be included in the chat context for future messages.*';
+            displayContent += '\n\n---\n*Due to length limitations, I may not have access to all previously mentioned documents and information in our conversation history*';
         }
         
         chatHistory.push({
