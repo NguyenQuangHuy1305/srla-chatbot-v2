@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         "2. Focus on a particular aspect or topic\n" +
                         "3. Limit the time period or scope of your query";
                 } else {
-                    errorMessage = 'An error occurred while processing your request. Please try again.';
+                    errorMessage = result.summary;
                 }
                 
                 appendMessage('system', errorMessage);
