@@ -239,6 +239,17 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
             debug_info["prompt_flow_time"] = request_time
             debug_info["prompt_flow_status"] = response.status_code
             
+            # Add new logging here for raw response
+            logger.info("Prompt flow raw response", extra={
+                "custom_dimensions": {
+                    "request_id": request_id,
+                    "status_code": response.status_code,
+                    "response_preview": response.text[:2000],  # First 2000 chars of response
+                    "response_length": len(response.text),
+                    "request_time": request_time
+                }
+            })
+            
             logger.info("Prompt flow request completed", extra={
                 "custom_dimensions": {
                     "request_id": request_id,
@@ -292,6 +303,19 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
         try:
             response_data = response.json()
             debug_info["response_size"] = len(json.dumps(response_data))
+            
+            # Add new logging here for parsed response
+            logger.info("Prompt flow parsed response", extra={
+                "custom_dimensions": {
+                    "request_id": request_id,
+                    "has_error": "error" in response_data,
+                    "response_type": "success" if "data" in response_data else "error",
+                    "summary_length": len(response_data.get("data", {}).get("final_result", {}).get("output", {}).get("summary", "")),
+                    "references_count": len(response_data.get("data", {}).get("final_result", {}).get("output", {}).get("references", [])),
+                    "debug_info": response_data.get("debug_info", {})
+                }
+            })
+            
             logger.info("Response parsed successfully", extra={
                 "custom_dimensions": {
                     "request_id": request_id,
