@@ -187,12 +187,37 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
             debug_info["prompt_flow_time"] = request_time
             debug_info["prompt_flow_status"] = response.status_code
             
-            # Log only the prompt flow response
+            response_text = response.text
+            
+            # Specifically check for backend call failure
+            if 'Backend call failure' in response_text:
+                logger.error("Backend call failure detected", extra={
+                    "custom_dimensions": {
+                        "request_id": request_id,
+                        "error_type": "backend_call_failure",
+                        "response_text": response_text,
+                        "status_code": response.status_code,
+                        "request_time": request_time
+                    }
+                })
+                return create_error_response(
+                    "Backend call failure",
+                    "The prompt flow service encountered a backend failure",
+                    502,  # Bad Gateway
+                    request_id,
+                    {
+                        **debug_info,
+                        "response_text": response_text,
+                        "error_type": "backend_call_failure"
+                    }
+                )
+            
+            # If no backend failure, log the successful response
             logger.info("Prompt flow response", extra={
                 "custom_dimensions": {
                     "request_id": request_id,
                     "status_code": response.status_code,
-                    "response_data": response.text,  # Complete response
+                    "response_data": response_text,
                     "request_time": request_time
                 }
             })
