@@ -47,14 +47,6 @@ try:
             sampler=ProbabilitySampler(1.0)
         )
         config_integration.trace_integrations(['requests'])
-        
-        # Test log to verify App Insights is working
-        logger.info("Application Insights initialization test", extra={
-            "custom_dimensions": {
-                "test": "startup",
-                "timestamp": datetime.now().isoformat()
-            }
-        })
     else:
         print("WARNING: APPLICATIONINSIGHTS_CONNECTION_STRING not found")
 except Exception as e:
@@ -77,26 +69,14 @@ def get_env_vars_with_retry(max_retries=3, retry_delay=1) -> Dict[str, str]:
             missing_vars = [var for var, value in env_vars.items() if not value]
             
             if not missing_vars:
-                logger.info("Environment variables loaded successfully", extra={
-                    "custom_dimensions": {
-                        "attempt": attempt + 1,
-                        "vars_present": len(required_vars)
-                    }
-                })
                 return env_vars
                 
             if attempt < max_retries - 1:
                 time.sleep(retry_delay)
         except Exception as e:
-            logger.error(f"Error loading environment variables", extra={
-                "custom_dimensions": {
-                    "attempt": attempt + 1,
-                    "error": str(e)
-                }
-            })
+            pass
     
     error_msg = f"Failed to load environment variables after {max_retries} attempts: {missing_vars}"
-    logger.error(error_msg)
     raise ValueError(error_msg)
 
 def create_error_response(error_type: str, details: str, status_code: int, request_id: str, additional_info: Dict[str, Any] = None) -> func.HttpResponse:
@@ -113,21 +93,6 @@ def create_error_response(error_type: str, details: str, status_code: int, reque
     
     if additional_info:
         error_body["debug_info"].update(additional_info)
-    
-    # Log error details to Application Insights
-    try:
-        logger.error(f"Error response: {error_type}", extra={
-            "custom_dimensions": {
-                "request_id": request_id,
-                "error_type": error_type,
-                "status_code": status_code,
-                "details": details,
-                **(additional_info if additional_info else {})
-            }
-        })
-    except Exception as log_error:
-        print(f"Failed to log error to Application Insights: {str(log_error)}")
-        print(f"Original error: {error_type} - {details}")
     
     headers = {
         "X-Debug-RequestId": request_id,
@@ -148,28 +113,11 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
     request_id = f"req_{int(time.time())}_{os.urandom(4).hex()}"
     debug_info = {"request_start_time": datetime.now().isoformat()}
     
-    # Log immediately when function starts
-    try:
-        logger.info("Chat function started", extra={
-            "custom_dimensions": {
-                "request_id": request_id,
-                "timestamp": datetime.now().isoformat()
-            }
-        })
-    except Exception as e:
-        print(f"Failed to log function start: {str(e)}")
-    
     try:
         # Parse request body
         try:
             req_body = req.get_json()
             debug_info["request_body_size"] = len(json.dumps(req_body))
-            logger.info("Request received", extra={
-                "custom_dimensions": {
-                    "request_id": request_id,
-                    "request_body_size": debug_info["request_body_size"]
-                }
-            })
         except ValueError as e:
             return create_error_response(
                 "Invalid request",
@@ -239,34 +187,19 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
             debug_info["prompt_flow_time"] = request_time
             debug_info["prompt_flow_status"] = response.status_code
             
-            # Add new logging here for raw response
-            logger.info("Prompt flow raw response", extra={
+            # Log only the prompt flow response
+            logger.info("Prompt flow response", extra={
                 "custom_dimensions": {
                     "request_id": request_id,
                     "status_code": response.status_code,
-                    "response_preview": response.text[:2000],  # First 2000 chars of response
-                    "response_length": len(response.text),
+                    "response_data": response.text,  # Complete response
                     "request_time": request_time
-                }
-            })
-            
-            logger.info("Prompt flow request completed", extra={
-                "custom_dimensions": {
-                    "request_id": request_id,
-                    "request_time": request_time,
-                    "status_code": response.status_code
                 }
             })
             
             response.raise_for_status()
             
         except requests.exceptions.Timeout:
-            logger.error("Prompt flow request timeout", extra={
-                "custom_dimensions": {
-                    "request_id": request_id,
-                    "timeout_after": 180
-                }
-            })
             return create_error_response(
                 "Request timeout",
                 "The request to the prompt flow service timed out",
@@ -287,10 +220,6 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
                     "prompt_flow_response_preview": e.response.text[:500]
                 })
             
-            logger.error("Prompt flow service error", extra={
-                "custom_dimensions": error_details
-            })
-            
             return create_error_response(
                 "Prompt flow service error",
                 str(e),
@@ -303,33 +232,7 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
         try:
             response_data = response.json()
             debug_info["response_size"] = len(json.dumps(response_data))
-            
-            # Add new logging here for parsed response
-            logger.info("Prompt flow parsed response", extra={
-                "custom_dimensions": {
-                    "request_id": request_id,
-                    "has_error": "error" in response_data,
-                    "response_type": "success" if "data" in response_data else "error",
-                    "summary_length": len(response_data.get("data", {}).get("final_result", {}).get("output", {}).get("summary", "")),
-                    "references_count": len(response_data.get("data", {}).get("final_result", {}).get("output", {}).get("references", [])),
-                    "debug_info": response_data.get("debug_info", {})
-                }
-            })
-            
-            logger.info("Response parsed successfully", extra={
-                "custom_dimensions": {
-                    "request_id": request_id,
-                    "response_size": debug_info["response_size"]
-                }
-            })
         except json.JSONDecodeError as e:
-            logger.error("Failed to parse prompt flow response", extra={
-                "custom_dimensions": {
-                    "request_id": request_id,
-                    "error": str(e),
-                    "response_preview": response.text[:500]
-                }
-            })
             return create_error_response(
                 "Invalid response",
                 "Failed to parse response from prompt flow service",
@@ -368,20 +271,6 @@ def chat(req: func.HttpRequest) -> func.HttpResponse:
             "stack_trace": traceback.format_exc(),
             **debug_info
         }
-        
-        # Multiple logging attempts for critical errors
-        try:
-            logger.error("Critical error in chat function", extra={
-                "custom_dimensions": error_info
-            })
-        except Exception as log_error:
-            print(f"Failed to log to Application Insights: {str(log_error)}")
-        
-        try:
-            # Backup logging using print
-            print(f"CRITICAL ERROR: {json.dumps(error_info)}")
-        except:
-            print("Failed to print error info")
         
         return create_error_response(
             "Internal server error",
